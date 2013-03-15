@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
+ * $Id: project_inliers.h 8753 2013-03-03 04:58:29Z sdmiller $
  *
  */
 
@@ -56,6 +56,7 @@
 #include <pcl/sample_consensus/sac_model_perpendicular_plane.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
 #include <pcl/sample_consensus/sac_model_sphere.h>
+#include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
 
 namespace pcl
 {

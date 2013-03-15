@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
+ * $Id: project_inliers.hpp 8051 2012-11-25 02:01:01Z rusu $
  *
  */
 
@@ -149,6 +149,12 @@ pcl::ProjectInliers<PointT>::initSACModel (int model_type)
     {
       //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_PARALLEL_PLANE\n", getClassName ().c_str ());
       sacmodel_.reset (new SampleConsensusModelParallelPlane<PointT> (input_));
+      break;
+    }
+	case SACMODEL_3_ORTHOGONAL_PLANES:
+    {
+      //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      sacmodel_.reset (new SampleConsensusModelNormalParallelPlane<PointT, pcl::Normal> (input_));
       break;
     }
     default:

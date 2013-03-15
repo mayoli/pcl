@@ -34,7 +34,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
+ * $Id: model_types.h 8068 2012-11-25 22:34:55Z rusu $
  *
  */
 
@@ -64,7 +64,8 @@ namespace pcl
     SACMODEL_REGISTRATION_2D,
     SACMODEL_PARALLEL_PLANE,
     SACMODEL_NORMAL_PARALLEL_PLANE,
-    SACMODEL_STICK
+    SACMODEL_STICK,
+    SACMODEL_3_ORTHOGONAL_PLANES
   };
 }
 
@@ -87,7 +88,8 @@ const static SampleSizeModel sample_size_pairs[] = {SampleSizeModel (pcl::SACMOD
                                                     SampleSizeModel (pcl::SACMODEL_REGISTRATION_2D, 3),
                                                     SampleSizeModel (pcl::SACMODEL_PARALLEL_PLANE, 3),
                                                     SampleSizeModel (pcl::SACMODEL_NORMAL_PARALLEL_PLANE, 3),
-                                                    SampleSizeModel (pcl::SACMODEL_STICK, 2)};
+                                                    SampleSizeModel (pcl::SACMODEL_STICK, 2),
+                                                    SampleSizeModel (pcl::SACMODEL_3_ORTHOGONAL_PLANES, 3)};
 
 namespace pcl
 {

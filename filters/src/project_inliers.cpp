@@ -34,7 +34,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
+ * $Id: project_inliers.cpp 8324 2012-12-25 22:44:13Z rusu $
  *
  */
 
@@ -236,6 +236,12 @@ pcl::ProjectInliers<sensor_msgs::PointCloud2>::initSACModel (int model_type)
     {
       //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_PARALLEL_PLANE\n", getClassName ().c_str ());
       sacmodel_.reset (new SampleConsensusModelParallelPlane<pcl::PointXYZ> (cloud_ptr));
+      break;
+    }
+	case SACMODEL_3_ORTHOGONAL_PLANES:
+    {
+      //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      sacmodel_.reset (new SampleConsensusModelNormalParallelPlane<pcl::PointXYZ, Normal> (cloud_ptr));
       break;
     }
     default:

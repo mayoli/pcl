@@ -34,7 +34,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
+ * $Id: sac_segmentation.hpp 8072 2012-11-25 23:23:49Z rusu $
  *
  */
 
@@ -69,6 +69,7 @@
 #include <pcl/sample_consensus/sac_model_sphere.h>
 #include <pcl/sample_consensus/sac_model_normal_sphere.h>
 #include <pcl/sample_consensus/sac_model_stick.h>
+#include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
@@ -489,6 +490,17 @@ pcl::SACSegmentationFromNormals<PointT, PointNT>::initSACModel (const int model_
       }
       break;
     }
+	case SACMODEL_3_ORTHOGONAL_PLANES:
+	{
+	PCL_DEBUG ("[pcl::%s::initSACModel] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      model_.reset (new SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT > (input_, *indices_, random_));
+      typename SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::Ptr model_orthogonal_planes = boost::static_pointer_cast<SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT> > (model_);
+
+      // Set the input normals
+      model_orthogonal_planes->setInputNormals (normals_);
+      
+	 break;
+	}
     // If nothing else, try SACSegmentation
     default:
     {
