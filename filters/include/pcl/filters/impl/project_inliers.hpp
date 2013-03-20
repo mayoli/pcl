@@ -151,6 +151,12 @@ pcl::ProjectInliers<PointT>::initSACModel (int model_type)
       sacmodel_.reset (new SampleConsensusModelParallelPlane<PointT> (input_));
       break;
     }
+	case SACMODEL_2_ORTHOGONAL_PLANES:
+    {
+      //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_2_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      sacmodel_.reset (new SampleConsensusModelNormalParallelPlane<PointT, pcl::Normal> (input_));
+      break;
+    }
 	case SACMODEL_3_ORTHOGONAL_PLANES:
     {
       //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());

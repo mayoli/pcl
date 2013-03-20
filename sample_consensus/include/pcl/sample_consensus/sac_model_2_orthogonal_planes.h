@@ -1,13 +1,13 @@
 //
-//  sac_model_3_orthogonal_planes.h
+//  sac_model_2_orthogonal_planes.h
 //  myvisualizer
 //
-//  Created by Mario Lietz on 10.03.13.
+//  Created by Mario Lietz on 19.03.13.
 //
 //
 
-#ifndef PCL_SAMPLE_CONSENSUS_MODEL_3_ORTHOGONAL_PLANES_H_
-#define PCL_SAMPLE_CONSENSUS_MODEL_3_ORTHOGONAL_PLANES_H_
+#ifndef PCL_SAMPLE_CONSENSUS_MODEL_2_ORTHOGONAL_PLANES_H_
+#define PCL_SAMPLE_CONSENSUS_MODEL_2_ORTHOGONAL_PLANES_H_
 
 
 #include <pcl/sample_consensus/sac_model.h>
@@ -15,11 +15,12 @@
 #include <pcl/common/common.h>
 #include <pcl/common/distances.h>
 #include <pcl/common/eigen.h>
+#include <pcl/common/intersections.h>
 
 namespace pcl
 {
 	template <typename PointT, typename PointNT>
-	class SampleConsensusModelThreeOrthogonalPlanes : public SampleConsensusModel<PointT> , public SampleConsensusModelFromNormals<PointT, PointNT>
+	class SampleConsensusModelTwoOrthogonalPlanes : public SampleConsensusModel<PointT> , public SampleConsensusModelFromNormals<PointT, PointNT>
 	{
 	public:
 	using SampleConsensusModel<PointT>::input_;
@@ -32,51 +33,51 @@ namespace pcl
 	typedef typename SampleConsensusModel<PointT>::PointCloudPtr PointCloudPtr;
 	typedef typename SampleConsensusModel<PointT>::PointCloudConstPtr PointCloudConstPtr;
 	
-	typedef boost::shared_ptr<SampleConsensusModelThreeOrthogonalPlanes> Ptr;
+	typedef boost::shared_ptr<SampleConsensusModelTwoOrthogonalPlanes> Ptr;
 	
 	/** \brief Constructor for base SampleConsensusModelPlane.
 	 * \param[in] cloud the input point cloud dataset
 	 * \param[in] random if true set the random seed to the current time, else set to 12345 (default: false)
 	 */
-	SampleConsensusModelThreeOrthogonalPlanes (const PointCloudConstPtr &cloud, bool random = false)
+	SampleConsensusModelTwoOrthogonalPlanes (const PointCloudConstPtr &cloud, bool random = false)
 	: SampleConsensusModel<PointT> (cloud, random)
 	, SampleConsensusModelFromNormals<PointT, PointNT> ()
-	, eps_angle_ (0.15) {};
+	, eps_angle_ (0.05) {};
 	
 	/** \brief Constructor for base SampleConsensusModelPlane.
 	 * \param[in] cloud the input point cloud dataset
 	 * \param[in] indices a vector of point indices to be used from \a cloud
 	 * \param[in] random if true set the random seed to the current time, else set to 12345 (default: false)
 	 */
-	SampleConsensusModelThreeOrthogonalPlanes (const PointCloudConstPtr &cloud,
+	SampleConsensusModelTwoOrthogonalPlanes (const PointCloudConstPtr &cloud,
 								const std::vector<int> &indices,
 								bool random = false)
 	: SampleConsensusModel<PointT> (cloud, indices, random)
 	, SampleConsensusModelFromNormals<PointT, PointNT> ()
-	, eps_angle_ (0.15) {};
+	, eps_angle_ (0.05) {};
 	
 	/** \brief Empty destructor */
-	virtual ~SampleConsensusModelThreeOrthogonalPlanes () {};
+	virtual ~SampleConsensusModelTwoOrthogonalPlanes () {};
 	/** \brief Copy constructor.
 	 * \param[in] source the model to copy into this
 	 */
-	SampleConsensusModelThreeOrthogonalPlanes (const SampleConsensusModelThreeOrthogonalPlanes &source) :
+	SampleConsensusModelTwoOrthogonalPlanes (const SampleConsensusModelTwoOrthogonalPlanes &source) :
     SampleConsensusModel<PointT> (), 
     SampleConsensusModelFromNormals<PointT, PointNT> (),
-    eps_angle_ (0.15)
+    eps_angle_ (0.05)
     {
     *this = source;
     }
 
-	inline SampleConsensusModelThreeOrthogonalPlanes&
-	operator = (const SampleConsensusModelThreeOrthogonalPlanes &source)
+	inline SampleConsensusModelTwoOrthogonalPlanes&
+	operator = (const SampleConsensusModelTwoOrthogonalPlanes &source)
 	{
 	SampleConsensusModel<PointT>::operator=(source);
 	eps_angle_ = source.eps_angle_;
 	return (*this);
 	};
 	/** \brief Set the angle epsilon (delta) threshold.
-    * \param[in] ea the maximum allowed difference between orthogonality and the angle between 2 normals.
+    * \param[in] ea the maximum allowed difference between orthogonality and the angle between the 2 normals.
     */
     inline void 
     setEpsAngle (const double ea) { eps_angle_ = ea; }
@@ -85,16 +86,17 @@ namespace pcl
     inline double 
     getEpsAngle () { return (eps_angle_); }
 
-
 	/** \brief Check whether the given index samples can form a valid model, compute the model coefficients from
 	 * these samples and store them internally in model_coefficients_. The coefficients are:
-	 * center.x
-	 * center.y
-	 * center.z
-	 * Quaternion.x
-	 * Quaternion.y
-	 * Quaternion.z
-	 * Quaternion.w
+	 * random point on intersection line.x
+	 * random point on intersection line.y
+	 * random point on intersection line.z
+	 * normal1.x
+	 * normal1.y
+	 * normal1.z
+	 * normal2.x
+	 * normal2.y
+	 * normal2.z
 	 * \param[in] samples the point indices found as possible good candidates for creating a valid model
 	 * \param[out] model_coefficients the resultant model coefficients
 	 */
@@ -102,8 +104,8 @@ namespace pcl
 	computeModelCoefficients (const std::vector<int> &samples,
 							  Eigen::VectorXf &model_coefficients);
 	
-	/** \brief Compute all distances from the cloud data to the given 3 orthogonal planes.
-	 * \param[in] model_coefficients the coefficients of a 3 orthogonal planes model that we need to compute distances to
+	/** \brief Compute all distances from the cloud data to a given 2 orthogonal planes model.
+	 * \param[in] model_coefficients the coefficients of a plane model that we need to compute distances to
 	 * \param[out] distances the resultant estimated distances
 	 */
 	void
@@ -111,7 +113,7 @@ namespace pcl
 						 std::vector<double> &distances);
 	
 	/** \brief Select all the points which respect the given model coefficients as inliers.
-	 * \param[in] model_coefficients the coefficients of a 3 orthogonal planes model that we need to compute distances to
+	 * \param[in] model_coefficients the coefficients of the 2 orthogonal planes model that we need to compute distances to
 	 * \param[in] threshold a maximum admissible distance threshold for determining the inliers from the outliers
 	 * \param[out] inliers the resultant model inliers
 	 */
@@ -152,9 +154,9 @@ namespace pcl
 				   PointCloud &projected_points,
 				   bool copy_data_fields = true);
 	
-	/** \brief Verify whether a subset of indices verifies the given 3 orthogonal planes model coefficients.
-	 * \param[in] indices the data indices that need to be tested against the 3 orthogonal planes model
-	 * \param[in] model_coefficients the 3 orthogonal planes model coefficients
+	/** \brief Verify whether a subset of indices verifies the given 2 orthogonal planes model coefficients.
+	 * \param[in] indices the data indices that need to be tested against the 2 orthogonal planes model
+	 * \param[in] model_coefficients the 2 orthogonal planes model coefficients
 	 * \param[in] threshold a maximum admissible distance threshold for determining the inliers from the outliers
 	 */
 	bool
@@ -164,7 +166,7 @@ namespace pcl
 	
 	/** \brief Return an unique id for this model (SACMODEL_PLANE). */
 	inline pcl::SacModel
-	getModelType () const { return (SACMODEL_3_ORTHOGONAL_PLANES); }
+	getModelType () const { return (SACMODEL_2_ORTHOGONAL_PLANES); }
 	
 	protected:
 	/** \brief Check whether a model is valid given the user constraints.
@@ -174,9 +176,9 @@ namespace pcl
 	isModelValid (const Eigen::VectorXf &model_coefficients)
 	{
 	// Needs a valid model coefficients
-	if (model_coefficients.size () != 7)
+	if (model_coefficients.size () != 9)
 		{
-		PCL_ERROR ("[pcl::SampleConsensusModelThreeOrthogonalPlanes::isModelValid] Invalid number of model coefficients given (%zu)!\n", model_coefficients.size ());
+		PCL_ERROR ("[pcl::SampleConsensusModelTwoOrthogonalPlanes::isModelValid] Invalid number of model coefficients given (%zu)!\n", model_coefficients.size ());
 		return (false);
 		}
 	return (true);
@@ -195,10 +197,10 @@ namespace pcl
 	};
 }
 #ifdef PCL_NO_PRECOMPILE
-#include <pcl/segmentation/impl/sac_model_3_orthogonal_planes.hpp>
+#include <pcl/segmentation/impl/sac_model_2_orthogonal_planes.hpp>
 #endif
 
-#endif  //#ifndef PCL_SAMPLE_CONSENSUS_MODEL_3_ORTHOGONAL_PLANES_H_
+#endif  //#ifndef PCL_SAMPLE_CONSENSUS_MODEL_2_ORTHOGONAL_PLANES_H_
 
 
 

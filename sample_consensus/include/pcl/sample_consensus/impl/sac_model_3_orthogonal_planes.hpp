@@ -78,7 +78,7 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::computeModelCoe
 	K(1,3) = K(3,1) = (normalSamples[2](0) - normalSamples[0](2))/3.;
 	K(2,2) = (normalSamples[2](2) - normalSamples[0](0) - normalSamples[1](1))/3.;
 	K(2,3) = K(3,2) = (normalSamples[0](1) - normalSamples[1](0))/3.;
-	K(3,3) = (normalSamples[0](0) + normalSamples[1](1) + normalSamples[2](2))/3.;
+	K(3,3) = (normalSamples[0](0) + normalSamples[1](1) + normalSamples[2](2))/3.; //Todo: indices seems to be transposed, but otherwise the direction is wrong
 	
 	// take eigenvector corresponding to largest eigenvalue
 	Eigen::EigenSolver<Eigen::Matrix4f> es (K);
@@ -213,8 +213,12 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::getDistancesToM
 		const PointNT &nt = normals_->points[(*indices_)[i]];
 		Eigen::Vector4f n (nt.normal_x, nt.normal_y, nt.normal_z, 0);
 		// Weight with the point curvature. On flat surfaces, curvature -> 0, which means the normal will have a higher influence
-		double weight = normal_distance_weight_ * (1.0 - nt.curvature);
-
+		// curvature isn't avaible on all normal methods
+		double weight = normal_distance_weight_;
+		if (!pcl_isnan (nt.curvature))
+			{
+			weight = normal_distance_weight_ * (1.0 - nt.curvature);
+			}
 		std::vector<double> distance(3);
 		
 		// Calculate the angular distance between the point normal and the plane normal
@@ -232,7 +236,6 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::getDistancesToM
 				
 		distances[i] = static_cast<double>(*std::min_element(distance.begin(), distance.end())); 
 		}
-	//Todo: take normale angular of normale and model normal into account
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

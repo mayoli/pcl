@@ -23,6 +23,7 @@ if(build)
         src/sac_model_plane.cpp
         src/sac_model_registration.cpp
         src/sac_model_sphere.cpp
+		src/sac_model_2_orthogonal_planes.cpp
 		src/sac_model_3_orthogonal_planes.cpp
         )
 
@@ -56,6 +57,7 @@ if(build)
         include/pcl/${SUBSYS_NAME}/sac_model_registration.h
         include/pcl/${SUBSYS_NAME}/sac_model_registration_2d.h
         include/pcl/${SUBSYS_NAME}/sac_model_sphere.h
+		include/pcl/${SUBSYS_NAME}/sac_model_2_orthogonal_planes.h
 		include/pcl/${SUBSYS_NAME}/sac_model_3_orthogonal_planes.h
         )
 
@@ -83,6 +85,7 @@ if(build)
         include/pcl/${SUBSYS_NAME}/impl/sac_model_registration.hpp
         include/pcl/${SUBSYS_NAME}/impl/sac_model_registration_2d.hpp
         include/pcl/${SUBSYS_NAME}/impl/sac_model_sphere.hpp
+		include/pcl/${SUBSYS_NAME}/impl/sac_model_2_orthogonal_planes.hpp
 		include/pcl/${SUBSYS_NAME}/impl/sac_model_3_orthogonal_planes.hpp
         )
 

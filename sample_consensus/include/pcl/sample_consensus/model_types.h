@@ -65,7 +65,8 @@ namespace pcl
     SACMODEL_PARALLEL_PLANE,
     SACMODEL_NORMAL_PARALLEL_PLANE,
     SACMODEL_STICK,
-    SACMODEL_3_ORTHOGONAL_PLANES
+    SACMODEL_2_ORTHOGONAL_PLANES,
+	SACMODEL_3_ORTHOGONAL_PLANES
   };
 }
 
@@ -89,6 +90,7 @@ const static SampleSizeModel sample_size_pairs[] = {SampleSizeModel (pcl::SACMOD
                                                     SampleSizeModel (pcl::SACMODEL_PARALLEL_PLANE, 3),
                                                     SampleSizeModel (pcl::SACMODEL_NORMAL_PARALLEL_PLANE, 3),
                                                     SampleSizeModel (pcl::SACMODEL_STICK, 2),
+													SampleSizeModel (pcl::SACMODEL_2_ORTHOGONAL_PLANES, 2),
                                                     SampleSizeModel (pcl::SACMODEL_3_ORTHOGONAL_PLANES, 3)};
 
 namespace pcl

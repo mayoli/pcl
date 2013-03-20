@@ -238,6 +238,12 @@ pcl::ProjectInliers<sensor_msgs::PointCloud2>::initSACModel (int model_type)
       sacmodel_.reset (new SampleConsensusModelParallelPlane<pcl::PointXYZ> (cloud_ptr));
       break;
     }
+	case SACMODEL_2_ORTHOGONAL_PLANES:
+    {
+      //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_2_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      sacmodel_.reset (new SampleConsensusModelNormalParallelPlane<pcl::PointXYZ, Normal> (cloud_ptr));
+      break;
+	}
 	case SACMODEL_3_ORTHOGONAL_PLANES:
     {
       //PCL_DEBUG ("[pcl::%s::segment] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());

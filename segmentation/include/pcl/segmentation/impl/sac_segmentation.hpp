@@ -69,6 +69,7 @@
 #include <pcl/sample_consensus/sac_model_sphere.h>
 #include <pcl/sample_consensus/sac_model_normal_sphere.h>
 #include <pcl/sample_consensus/sac_model_stick.h>
+#include <pcl/sample_consensus/sac_model_2_orthogonal_planes.h>
 #include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -490,6 +491,25 @@ pcl::SACSegmentationFromNormals<PointT, PointNT>::initSACModel (const int model_
       }
       break;
     }
+	case SACMODEL_2_ORTHOGONAL_PLANES:
+	{
+	PCL_DEBUG ("[pcl::%s::initSACModel] Using a model of type: SACMODEL_2_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
+      model_.reset (new SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT > (input_, *indices_, random_));
+      typename SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT>::Ptr model_orthogonal_planes = boost::static_pointer_cast<SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT> > (model_);
+      // Set the input normals
+      model_orthogonal_planes->setInputNormals (normals_);
+      if (distance_weight_ != model_orthogonal_planes->getNormalDistanceWeight ())
+      {
+        PCL_DEBUG ("[pcl::%s::initSACModel] Setting normal distance weight to %f\n", getClassName ().c_str (), distance_weight_);
+        model_orthogonal_planes->setNormalDistanceWeight (distance_weight_);
+      }
+	  if (eps_angle_ != 0.0 && model_orthogonal_planes->getEpsAngle () != eps_angle_)
+      {
+        PCL_DEBUG ("[pcl::%s::initSACModel] Setting the epsilon angle to %f (%f degrees)\n", getClassName ().c_str (), eps_angle_, eps_angle_ * 180.0 / M_PI);
+        model_orthogonal_planes->setEpsAngle (eps_angle_);
+      }
+      break;
+	}
 	case SACMODEL_3_ORTHOGONAL_PLANES:
 	{
 	PCL_DEBUG ("[pcl::%s::initSACModel] Using a model of type: SACMODEL_3_ORTHOGONAL_PLANES\n", getClassName ().c_str ());
@@ -498,7 +518,17 @@ pcl::SACSegmentationFromNormals<PointT, PointNT>::initSACModel (const int model_
 
       // Set the input normals
       model_orthogonal_planes->setInputNormals (normals_);
-      
+      if (distance_weight_ != model_orthogonal_planes->getNormalDistanceWeight ())
+      {
+        PCL_DEBUG ("[pcl::%s::initSACModel] Setting normal distance weight to %f\n", getClassName ().c_str (), distance_weight_);
+        model_orthogonal_planes->setNormalDistanceWeight (distance_weight_);
+      }
+	  if (eps_angle_ != 0.0 && model_orthogonal_planes->getEpsAngle () != eps_angle_)
+      {
+        PCL_DEBUG ("[pcl::%s::initSACModel] Setting the epsilon angle to %f (%f degrees)\n", getClassName ().c_str (), eps_angle_, eps_angle_ * 180.0 / M_PI);
+        model_orthogonal_planes->setEpsAngle (eps_angle_);
+      }
+
 	 break;
 	}
     // If nothing else, try SACSegmentation
