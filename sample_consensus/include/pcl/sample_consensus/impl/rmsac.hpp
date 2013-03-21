@@ -110,7 +110,8 @@ pcl::RandomizedMEstimatorSampleConsensus<PointT>::computeModel (int debug_verbos
       continue;
 
     for (size_t i = 0; i < distances.size (); ++i)
-      d_cur_penalty += (std::min) (distances[i], threshold_);
+      //d_cur_penalty += (std::min) (distances[i], threshold_);
+	  d_cur_penalty += (std::min) (threshold_, distances[i]);  // this works with NaN too. VS specific?
 
     // Better match ?
     if (d_cur_penalty < d_best_penalty)

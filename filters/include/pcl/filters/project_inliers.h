@@ -56,7 +56,8 @@
 #include <pcl/sample_consensus/sac_model_perpendicular_plane.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
 #include <pcl/sample_consensus/sac_model_sphere.h>
-#include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
+//#include <pcl/sample_consensus/sac_model_2_orthogonal_planes.h>
+//#include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
 
 namespace pcl
 {
