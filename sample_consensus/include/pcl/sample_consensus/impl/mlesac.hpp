@@ -105,13 +105,15 @@ pcl::MaximumLikelihoodSampleConsensus<PointT>::computeModel (int debug_verbosity
     double gamma = 0.5;
     double p_outlier_prob = 0;
 
-    indices_size = sac_model_->getIndices ()->size ();
+    //indices_size = sac_model_->getIndices ()->size ();
+	indices_size = distances.size (); // works, if the model is not valid given the user constraints
     std::vector<double> p_inlier_prob (indices_size);
     for (int j = 0; j < iterations_EM_; ++j)
     {
       // Likelihood of a datum given that it is an inlier
       for (size_t i = 0; i < indices_size; ++i)
-        p_inlier_prob[i] = gamma * exp (- (distances[i] * distances[i] ) / 2 * (sigma_ * sigma_) ) /
+		  if (!pcl_isnan (distances[i]))
+			  p_inlier_prob[i] = gamma * exp (- (distances[i] * distances[i] ) / 2 * (sigma_ * sigma_) ) /
                            (sqrt (2 * M_PI) * sigma_);
 
       // Likelihood of a datum given that it is an outlier
@@ -119,7 +121,8 @@ pcl::MaximumLikelihoodSampleConsensus<PointT>::computeModel (int debug_verbosity
 
       gamma = 0;
       for (size_t i = 0; i < indices_size; ++i)
-        gamma += p_inlier_prob [i] / (p_inlier_prob[i] + p_outlier_prob);
+		  if (!pcl_isnan (distances[i]))
+			  gamma += p_inlier_prob [i] / (p_inlier_prob[i] + p_outlier_prob);
       gamma /= static_cast<double>(sac_model_->getIndices ()->size ());
     }
 

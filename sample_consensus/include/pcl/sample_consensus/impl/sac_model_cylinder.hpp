@@ -47,8 +47,14 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT, typename PointNT> bool
-pcl::SampleConsensusModelCylinder<PointT, PointNT>::isSampleGood (const std::vector<int> &) const
+pcl::SampleConsensusModelCylinder<PointT, PointNT>::isSampleGood (const std::vector<int> &samples) const
 {
+// sample normals must not be nan
+	if (!pcl::isFinite (normals_->points[samples.at(0)]) ||
+		!pcl::isFinite (normals_->points[samples.at(1)]))
+		{
+		return (false);
+		}
   return (true);
 }
 
