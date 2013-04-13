@@ -8,6 +8,7 @@
 #ifndef PCL_SAMPLE_CONSENSUS_IMPL_SAC_2_ORTHOGONAL_PLANES_H_
 #define PCL_SAMPLE_CONSENSUS_IMPL_SAC_2_ORTHOGONAL_PLANES_H_
 
+#include <pcl/sample_consensus/eigen.h>
 #include <pcl/sample_consensus/sac_model_2_orthogonal_planes.h>
 #include <pcl/sample_consensus/sac_model.h>
 #include <pcl/sample_consensus/model_types.h>
@@ -313,6 +314,84 @@ pcl::SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT>::optimizeModelCoef
 		PCL_DEBUG ("[pcl::SampleConsensusModelTwoOrthogonalPlanes:optimizeModelCoefficients] Inliers vector empty! Returning the same coefficients.\n");
 		return;
 		}
+
+	tmp_inliers_ = &inliers;
+
+	// optimization must respect the orthogonalaty condition: using quaterion should fulfill this requirement
+	Eigen::Matrix3f rotationMatrix;
+	rotationMatrix(0,0) = model_coefficients[3];
+	rotationMatrix(1,0) = model_coefficients[4];
+	rotationMatrix(2,0) = model_coefficients[5];
+	rotationMatrix(0,1) = model_coefficients[6];
+	rotationMatrix(1,1) = model_coefficients[7];
+	rotationMatrix(2,1) = model_coefficients[8];
+	rotationMatrix(0,2) = 0;
+	rotationMatrix(1,2) = 0;
+	rotationMatrix(2,2) = 0;
+	rotationMatrix.transposeInPlace ();
+
+	Eigen::Matrix4f K;
+	K(0,0) = (rotationMatrix(0,0) - rotationMatrix(1,1) - rotationMatrix(2,2))/3.;
+	K(0,1) = K(1,0) = (rotationMatrix(0,1) + rotationMatrix(1,0))/3.;
+	K(0,2) = K(2,0) = (rotationMatrix(0,2) + rotationMatrix(2,0))/3.;
+	K(0,3) = K(3,0) = (rotationMatrix(1,2) - rotationMatrix(2,1))/3.;
+	K(1,1) = (rotationMatrix(1,1) - rotationMatrix(0,0) - rotationMatrix(2,2))/3.;
+	K(1,2) = K(2,1) = (rotationMatrix(1,2) + rotationMatrix(2,1))/3.;
+	K(1,3) = K(3,1) = (rotationMatrix(2,0) - rotationMatrix(0,2))/3.;
+	K(2,2) = (rotationMatrix(2,2) - rotationMatrix(0,0) - rotationMatrix(1,1))/3.;
+	K(2,3) = K(3,2) = (rotationMatrix(0,1) - rotationMatrix(1,0))/3.;
+	K(3,3) = (rotationMatrix(0,0) + rotationMatrix(1,1) + rotationMatrix(2,2))/3.;
+
+	// take eigenvector corresponding to largest eigenvalue
+	Eigen::EigenSolver<Eigen::Matrix4f> es (K);
+	Eigen::Vector4cf Eigenvalues = es.eigenvalues();
+	float maxEV = abs(Eigenvalues(0));
+	int maxEV_Ind = 0;
+	for (int i = 1; i < 4 ; i++)
+		{
+		if (abs(Eigenvalues(i)) > maxEV)
+			{
+			maxEV = abs(Eigenvalues(i));
+			maxEV_Ind = i;
+			}
+		}
+	// set rotation as quaternion
+	Eigen::Vector4f Eigenvector = es.eigenvectors ().col (maxEV_Ind).real ();
+
+	Eigen::VectorXf coefficientsQuaternion;
+	coefficientsQuaternion.resize (7);
+	coefficientsQuaternion[0] = model_coefficients[0];
+	coefficientsQuaternion[1] = model_coefficients[1];
+	coefficientsQuaternion[2] = model_coefficients[2];
+	coefficientsQuaternion[3] = Eigenvector[0];
+	coefficientsQuaternion[4] = Eigenvector[1];
+	coefficientsQuaternion[5] = Eigenvector[2];
+	coefficientsQuaternion[6] = Eigenvector[3];
+
+	OptimizationFunctor functor (static_cast<int> (inliers.size ()), this);
+	Eigen::NumericalDiff<OptimizationFunctor > num_diff (functor);
+	Eigen::LevenbergMarquardt<Eigen::NumericalDiff<OptimizationFunctor>, float> lm (num_diff);
+	int info = lm.minimize (coefficientsQuaternion);
+
+	Eigen::Quaternionf rotationQuaternion (coefficientsQuaternion[6], coefficientsQuaternion[3], coefficientsQuaternion[4], coefficientsQuaternion[5]);
+	rotationQuaternion.normalize ();
+	rotationMatrix = rotationQuaternion.toRotationMatrix ();
+
+	optimized_coefficients[0] = coefficientsQuaternion[0];
+	optimized_coefficients[1] = coefficientsQuaternion[1];
+	optimized_coefficients[2] = coefficientsQuaternion[2];
+	optimized_coefficients[3] = rotationMatrix(0,0);
+	optimized_coefficients[4] = rotationMatrix(1,0);
+	optimized_coefficients[5] = rotationMatrix(2,0);
+	optimized_coefficients[6] = rotationMatrix(0,1);
+	optimized_coefficients[7] = rotationMatrix(1,1);
+	optimized_coefficients[8] = rotationMatrix(2,1);
+
+	
+	// Compute the L2 norm of the residuals
+	PCL_DEBUG ("[pcl::SampleConsensusModelCylinder::optimizeModelCoefficients] LM solver finished with exit code %i, having a residual norm of %g. \nInitial solution: %g %g %g %g %g %g %g \nFinal solution: %g %g %g %g %g %g %g\n",
+				info, lm.fvec.norm (), model_coefficients[0], model_coefficients[1], model_coefficients[2], model_coefficients[3],
+				model_coefficients[4], model_coefficients[5], model_coefficients[6], model_coefficients[7], model_coefficients[8], optimized_coefficients[0], optimized_coefficients[1], optimized_coefficients[2], optimized_coefficients[3], optimized_coefficients[4], optimized_coefficients[5], optimized_coefficients[6], optimized_coefficients[7], optimized_coefficients[8]);
 	
 }
 

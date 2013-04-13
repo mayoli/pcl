@@ -185,6 +185,8 @@ namespace pcl
 	private:
 	/** \brief maximum allowed difference between orthogonality and the angle between 2 normals. */
 	double eps_angle_;
+
+
 	
 	/** \brief Check if a sample of indices results in a good sample of points
 	 * indices.
@@ -192,6 +194,69 @@ namespace pcl
 	 */
 	virtual bool
 	isSampleGood (const std::vector<int> &samples) const;
+
+
+	
+	/** \brief temporary pointer to a list of given indices for optimizeModelCoefficients () */
+	const std::vector<int> *tmp_inliers_;
+	
+
+#if defined BUILD_Maintainer && defined __GNUC__ && __GNUC__ == 4 && __GNUC_MINOR__ > 3
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
+	/** \brief Functor for the optimization function */
+	struct OptimizationFunctor : pcl::Functor<float>
+	{
+	/** Functor constructor
+		* \param[in] m_data_points the number of data points to evaluate
+		* \param[in] estimator pointer to the estimator object
+		* \param[in] distance distance computation function pointer
+		*/
+	OptimizationFunctor (int m_data_points, pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT> *model) : 
+		pcl::Functor<float> (m_data_points), model_ (model) {}
+
+	/** Cost function to be minimized
+		* \param[in] x variables array
+		* \param[out] fvec resultant functions evaluations
+		* \return 0
+		*/
+	int 
+	operator() (const Eigen::VectorXf &x, Eigen::VectorXf &fvec) const
+	{
+	Eigen::Quaternionf rotationQuaternion (x[6],x[3],x[4],x[5]);
+	rotationQuaternion.normalize ();
+	Eigen::Matrix3f rotationMatrix = rotationQuaternion.toRotationMatrix ();
+	
+	std::vector<Eigen::Vector4f> planeCoefficients (3);
+	
+	planeCoefficients.at(0) = (Eigen::Vector4f (rotationMatrix.coeff(0,0),rotationMatrix.coeff(1,0),rotationMatrix.coeff(2,0), -(rotationMatrix.coeff(0,0)*x[0] + rotationMatrix.coeff(1,0)*x[1] + rotationMatrix.coeff(2,0)*x[2]) ) );
+	planeCoefficients.at(1) = (Eigen::Vector4f (rotationMatrix.coeff(0,1),rotationMatrix.coeff(1,1),rotationMatrix.coeff(2,1), -(rotationMatrix.coeff(0,1)*x[0] + rotationMatrix.coeff(1,1)*x[1] + rotationMatrix.coeff(2,1)*x[2]) ) );
+	planeCoefficients.at(2) = (Eigen::Vector4f (rotationMatrix.coeff(0,2),rotationMatrix.coeff(1,2),rotationMatrix.coeff(2,2), -(rotationMatrix.coeff(0,2)*x[0] + rotationMatrix.coeff(1,2)*x[1] + rotationMatrix.coeff(2,2)*x[2]) ) );
+	// the model coefficients (Tx, Ty, Tz, Qx, Qy, Qz, Qw)
+	
+	for  (int i = 0; i < values (); ++i)
+		{
+		Eigen::Vector4f pt (model_->input_->points[(*model_->tmp_inliers_)[i]].x, model_->input_->points[(*model_->tmp_inliers_)[i]].y, model_->input_->points[(*model_->tmp_inliers_)[i]].z, 1);
+		std::vector<float> distance(3);
+		
+		// Calculate the angular distance between the point normal and the plane normal
+		distance.at(0) = fabs(planeCoefficients.at(0).dot (pt));
+		distance.at(1) = fabs(planeCoefficients.at(1).dot (pt));
+		distance.at(2) = fabs(planeCoefficients.at(2).dot (pt));
+				
+		fvec[i] = *std::min_element(distance.begin(), distance.end()); 
+		//fvec[i] = pow(static_cast<float>(*std::min_element(distance.begin(), distance.end())) ,2 ); 
+		}
+
+		return (0);
+	}
+
+	pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT> *model_;
+	};
+#if defined BUILD_Maintainer && defined __GNUC__ && __GNUC__ == 4 && __GNUC_MINOR__ > 3
+#pragma GCC diagnostic warning "-Weffc++"
+#endif
+
 	};
 }
 #ifdef PCL_NO_PRECOMPILE

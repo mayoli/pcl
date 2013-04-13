@@ -8,6 +8,8 @@
 #ifndef PCL_SAMPLE_CONSENSUS_IMPL_SAC_3_ORTHOGONAL_PLANES_H_
 #define PCL_SAMPLE_CONSENSUS_IMPL_SAC_3_ORTHOGONAL_PLANES_H_
 
+#include <pcl/sample_consensus/eigen.h>
+
 #include <pcl/sample_consensus/sac_model_3_orthogonal_planes.h>
 #include <pcl/sample_consensus/sac_model.h>
 #include <pcl/sample_consensus/model_types.h>
@@ -314,6 +316,25 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::optimizeModelCo
 		PCL_DEBUG ("[pcl::SampleConsensusModelThreeOrthogonalPlanes:optimizeModelCoefficients] Inliers vector empty! Returning the same coefficients.\n");
 		return;
 		}
+	tmp_inliers_ = &inliers;
+
+	OptimizationFunctor functor (static_cast<int> (inliers.size ()), this);
+	Eigen::NumericalDiff<OptimizationFunctor > num_diff (functor);
+	Eigen::LevenbergMarquardt<Eigen::NumericalDiff<OptimizationFunctor>, float> lm (num_diff);
+	int info = lm.minimize (optimized_coefficients);
+  
+	// Compute the L2 norm of the residuals
+	PCL_DEBUG ("[pcl::SampleConsensusModelCylinder::optimizeModelCoefficients] LM solver finished with exit code %i, having a residual norm of %g. \nInitial solution: %g %g %g %g %g %g %g \nFinal solution: %g %g %g %g %g %g %g\n",
+				info, lm.fvec.norm (), model_coefficients[0], model_coefficients[1], model_coefficients[2], model_coefficients[3],
+				model_coefficients[4], model_coefficients[5], model_coefficients[6], optimized_coefficients[0], optimized_coefficients[1], optimized_coefficients[2], optimized_coefficients[3], optimized_coefficients[4], optimized_coefficients[5], optimized_coefficients[6]);
+	
+	Eigen::Quaternionf rotationQuaternion (optimized_coefficients[6], optimized_coefficients[3], optimized_coefficients[4], optimized_coefficients[5]);
+	rotationQuaternion.normalize ();
+
+	optimized_coefficients[3] = rotationQuaternion.x ();
+	optimized_coefficients[4] = rotationQuaternion.y ();
+	optimized_coefficients[5] = rotationQuaternion.z ();
+	optimized_coefficients[6] = rotationQuaternion.w ();
 	
 }
 
