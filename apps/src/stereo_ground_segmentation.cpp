@@ -123,7 +123,7 @@ class HRCSSegmentation
       
       // Set up a 3D viewer
       viewer->setBackgroundColor (0, 0, 0);
-      viewer->addCoordinateSystem (1.0);
+      viewer->addCoordinateSystem (1.0, "global");
       viewer->initCameraParameters ();
       viewer->registerKeyboardCallback (&HRCSSegmentation::keyboardCallback, *this, 0);
       
@@ -277,7 +277,7 @@ class HRCSSegmentation
                                      cloud->points[region_indices[i].indices[j]].y,
                                      cloud->points[region_indices[i].indices[j]].z);
             ground_cloud->points.push_back (ground_pt);
-            ground_image->points[region_indices[i].indices[j]].g = static_cast<uint8_t> ((cloud->points[region_indices[i].indices[j]].g + 255) / 2);
+            ground_image->points[region_indices[i].indices[j]].g = static_cast<pcl::uint8_t> ((cloud->points[region_indices[i].indices[j]].g + 255) / 2);
             label_image->points[region_indices[i].indices[j]].r = 0;
             label_image->points[region_indices[i].indices[j]].g = 255;
             label_image->points[region_indices[i].indices[j]].b = 0;
@@ -367,8 +367,8 @@ class HRCSSegmentation
                                        cloud->points[region_indices[i].indices[j]].y,
                                        cloud->points[region_indices[i].indices[j]].z);
               ground_cloud->points.push_back (ground_pt);
-              ground_image->points[region_indices[i].indices[j]].r = static_cast<uint8_t> ((cloud->points[region_indices[i].indices[j]].r + 255) / 2);
-              ground_image->points[region_indices[i].indices[j]].g = static_cast<uint8_t> ((cloud->points[region_indices[i].indices[j]].g + 255) / 2);
+              ground_image->points[region_indices[i].indices[j]].r = static_cast<pcl::uint8_t> ((cloud->points[region_indices[i].indices[j]].r + 255) / 2);
+              ground_image->points[region_indices[i].indices[j]].g = static_cast<pcl::uint8_t> ((cloud->points[region_indices[i].indices[j]].g + 255) / 2);
               label_image->points[region_indices[i].indices[j]].r = 128;
               label_image->points[region_indices[i].indices[j]].g = 128;
               label_image->points[region_indices[i].indices[j]].b = 0;
@@ -455,7 +455,7 @@ class HRCSSegmentation
       {
         if (!pcl::isFinite (cloud->points[i]))
         {
-          ground_image->points[i].b = static_cast<uint8_t>((cloud->points[i].b + 255) / 2);
+          ground_image->points[i].b = static_cast<pcl::uint8_t>((cloud->points[i].b + 255) / 2);
           label_image->points[i].r = 0;
           label_image->points[i].g = 0;
           label_image->points[i].b = 255;

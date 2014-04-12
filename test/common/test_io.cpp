@@ -36,6 +36,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <pcl/pcl_tests.h>
 #include <pcl/point_types.h>
 #include <pcl/common/io.h>
 
@@ -87,12 +88,8 @@ TEST (PCL, copyPointCloud)
   EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 5);
   for (int i = 0; i < 5; ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].x, cloud_xyz_rgb_normal[i].x);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].y, cloud_xyz_rgb_normal[i].y);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].z, cloud_xyz_rgb_normal[i].z);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].r, cloud_xyz_rgb_normal[i].r);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].g, cloud_xyz_rgb_normal[i].g);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].b, cloud_xyz_rgb_normal[i].b);
+    EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
+    EXPECT_RGB_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 
@@ -102,12 +99,8 @@ TEST (PCL, copyPointCloud)
   EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 2);
   for (int i = 0; i < 2; ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].x, cloud_xyz_rgb_normal[i].x);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].y, cloud_xyz_rgb_normal[i].y);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].z, cloud_xyz_rgb_normal[i].z);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].r, cloud_xyz_rgb_normal[i].r);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].g, cloud_xyz_rgb_normal[i].g);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].b, cloud_xyz_rgb_normal[i].b);
+    EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
+    EXPECT_RGB_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 
@@ -117,12 +110,8 @@ TEST (PCL, copyPointCloud)
   EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
   for (int i = 0; i < 3; ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].x, cloud_xyz_rgb_normal[i].x);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].y, cloud_xyz_rgb_normal[i].y);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].z, cloud_xyz_rgb_normal[i].z);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].r, cloud_xyz_rgb_normal[i].r);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].g, cloud_xyz_rgb_normal[i].g);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].b, cloud_xyz_rgb_normal[i].b);
+    EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
+    EXPECT_RGB_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 
@@ -131,12 +120,8 @@ TEST (PCL, copyPointCloud)
   EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
   for (int i = 0; i < 3; ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].x, cloud_xyz_rgb_normal[i].x);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].y, cloud_xyz_rgb_normal[i].y);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].z, cloud_xyz_rgb_normal[i].z);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].r, cloud_xyz_rgb_normal[i].r);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].g, cloud_xyz_rgb_normal[i].g);
-    EXPECT_FLOAT_EQ (cloud_xyz_rgba[i].b, cloud_xyz_rgb_normal[i].b);
+    EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
+    EXPECT_RGB_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 }
@@ -155,35 +140,27 @@ TEST (PCL, concatenatePointCloud)
   cloud_xyz_rgba2.push_back (pt_xyz_rgba2);
   cloud_xyz_rgba2.push_back (pt_xyz_rgba2);
 
-  sensor_msgs::PointCloud2 cloud1, cloud2, cloud_out, cloud_out2, cloud_out3, cloud_out4;
-  pcl::toROSMsg (cloud_xyz_rgba, cloud1);
-  pcl::toROSMsg (cloud_xyz_rgba2, cloud2);
+  pcl::PCLPointCloud2 cloud1, cloud2, cloud_out, cloud_out2, cloud_out3, cloud_out4;
+  pcl::toPCLPointCloud2 (cloud_xyz_rgba, cloud1);
+  pcl::toPCLPointCloud2 (cloud_xyz_rgba2, cloud2);
 
   // Regular
   pcl::concatenatePointCloud (cloud1, cloud2, cloud_out);
   
   CloudXYZRGBA cloud_all;
-  pcl::fromROSMsg (cloud_out, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgba[i].z);
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgba[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgba[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgba[i].b);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgba2.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].x, cloud_xyz_rgba2[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].y, cloud_xyz_rgba2[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].z, cloud_xyz_rgba2[i].z);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, cloud_xyz_rgba2[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, cloud_xyz_rgba2[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, cloud_xyz_rgba2[i].b);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgba2[i]);
+    EXPECT_RGB_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgba2[i]);
     EXPECT_EQ (cloud_all[cloud_xyz_rgba.size () + i].rgba, cloud_xyz_rgba2[i].rgba);
   }
 
@@ -192,30 +169,22 @@ TEST (PCL, concatenatePointCloud)
   cloud_xyz_rgb.push_back (pt_xyz_rgb);
   cloud_xyz_rgb.push_back (pt_xyz_rgb);
 
-  pcl::toROSMsg (cloud_xyz_rgb, cloud2);
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
   pcl::concatenatePointCloud (cloud1, cloud2, cloud_out2);
   
-  pcl::fromROSMsg (cloud_out2, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out2, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgba[i].z);
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgba[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgba[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgba[i].b);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].z, cloud_xyz_rgb[i].z);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, cloud_xyz_rgb[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, cloud_xyz_rgb[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, cloud_xyz_rgb[i].b);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
+    EXPECT_RGB_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
     EXPECT_EQ (cloud_all[cloud_xyz_rgba.size () + i].rgba, cloud_xyz_rgb[i].rgba);
   }
 
@@ -224,25 +193,19 @@ TEST (PCL, concatenatePointCloud)
   cloud1.fields[rgb_idx].name = "_";
   pcl::concatenatePointCloud (cloud1, cloud2, cloud_out3);
   
-  pcl::fromROSMsg (cloud_out3, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out3, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgba[i].z);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     // Data doesn't get modified
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgba[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgba[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgba[i].b);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].z, cloud_xyz_rgb[i].z);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, 0);
@@ -255,25 +218,19 @@ TEST (PCL, concatenatePointCloud)
   cloud2.fields[rgb_idx].name = "_";
   pcl::concatenatePointCloud (cloud1, cloud2, cloud_out4);
 
-  pcl::fromROSMsg (cloud_out4, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out4, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgba[i].z);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     // Data doesn't get modified
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgba[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgba[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgba[i].b);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].z, cloud_xyz_rgb[i].z);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, 0);
@@ -283,31 +240,25 @@ TEST (PCL, concatenatePointCloud)
   // _ vs _
   rgb_idx = pcl::getFieldIndex (cloud1, "rgba");
   cloud1.fields[rgb_idx].name = "_";
-  pcl::toROSMsg (cloud_xyz_rgb, cloud2);
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
   rgb_idx = pcl::getFieldIndex (cloud2, "rgb");
   cloud2.fields[rgb_idx].name = "_";
 
   pcl::concatenatePointCloud (cloud1, cloud2, cloud_out3);
   
-  pcl::fromROSMsg (cloud_out3, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out3, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgba[i].z);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     // Data doesn't get modified
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgba[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgba[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgba[i].b);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgba[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].z, cloud_xyz_rgb[i].z);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, 0);
@@ -319,28 +270,22 @@ TEST (PCL, concatenatePointCloud)
   rgb_idx = pcl::getFieldIndex (cloud1, "rgba");
 
   cloud1.fields[rgb_idx].name = "_";
-  pcl::toROSMsg (cloud_xyz_rgb, cloud2);
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
   pcl::concatenatePointCloud (cloud2, cloud1, cloud_out3);
   
-  pcl::fromROSMsg (cloud_out3, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out3, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgb[i].z);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgb[i]);
     // Data doesn't get modified
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgb[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgb[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgb[i].b);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgb[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgb[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].z, cloud_xyz_rgba[i].z);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgb.size () + i], cloud_xyz_rgba[i]);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].r, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].g, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].b, 0);
@@ -353,29 +298,42 @@ TEST (PCL, concatenatePointCloud)
   cloud2.fields[rgb_idx].name = "_";
   pcl::concatenatePointCloud (cloud2, cloud1, cloud_out4);
 
-  pcl::fromROSMsg (cloud_out4, cloud_all);
+  pcl::fromPCLPointCloud2 (cloud_out4, cloud_all);
 
   EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[i].x, cloud_xyz_rgb[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[i].y, cloud_xyz_rgb[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[i].z, cloud_xyz_rgb[i].z);
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgb[i]);
     // Data doesn't get modified
-    EXPECT_FLOAT_EQ (cloud_all[i].r, cloud_xyz_rgb[i].r);
-    EXPECT_FLOAT_EQ (cloud_all[i].g, cloud_xyz_rgb[i].g);
-    EXPECT_FLOAT_EQ (cloud_all[i].b, cloud_xyz_rgb[i].b);
+    EXPECT_RGB_EQ (cloud_all[i], cloud_xyz_rgb[i]);
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgb[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
   {
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].x, cloud_xyz_rgba[i].x);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].y, cloud_xyz_rgba[i].y);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].z, cloud_xyz_rgba[i].z);
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgb.size () + i], cloud_xyz_rgba[i]);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].r, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].g, 0);
     EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgb.size () + i].b, 0);
     EXPECT_EQ (cloud_all[cloud_xyz_rgb.size () + i].rgba, 0);
+  }
+}
+
+TEST (PCL, CopyPointCloudWithIndicesAndRGBToRGBA)
+{
+  CloudXYZRGB cloud_xyz_rgb;
+  CloudXYZRGBA cloud_xyz_rgba (5, 1, pt_xyz_rgba);
+
+  std::vector<int> indices;
+  indices.push_back (2);
+  indices.push_back (3);
+
+  pcl::copyPointCloud (cloud_xyz_rgba, indices, cloud_xyz_rgb);
+
+  EXPECT_EQ (indices.size (), cloud_xyz_rgb.size ());
+  for (size_t i = 0; i < indices.size (); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_xyz_rgb[i], cloud_xyz_rgba[indices[i]]);
+    EXPECT_EQ (cloud_xyz_rgb[i].rgba, cloud_xyz_rgba[indices[i]].rgba);
   }
 }
 

@@ -54,7 +54,7 @@
 #include <stdexcept>
 
 // PCL specific includes
-#include <pcl/ros/conversions.h>
+#include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/console/print.h>
@@ -221,7 +221,7 @@ namespace pcl
        * @param[in] parent_label this is the part label that indicates the row
        * @param[in] child_label  this is the part label that indicates the childs needed to be investigated
        * @param[in] child_number the number of this child in the parent, some parents have multiple childs
-       * @return zero if succesfull
+       * @return zero if successfull
        * @todo once we have good evaluation function reconsider best_value
        **/
       inline int
@@ -279,7 +279,7 @@ namespace pcl
        * @param[in] parent_label this is the part label that indicates the row
        * @param[in] child_label  this is the part label that indicates the childs needed to be investigated
        * @param[in] child_number the number of this child in the parent, some parents have multiple childs
-       * @return zero if succesfull
+       * @return zero if successfull
        * @todo once we have good evaluation function reconsider best_value
        **/
       inline int

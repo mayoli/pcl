@@ -44,7 +44,7 @@
   * The viewpoint can be set to 1 or multiple views on a sphere.
   */
 #include <string>
-#include <pcl/ros/register_point_struct.h>
+#include <pcl/register_point_struct.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/filters/voxel_grid.h>
@@ -431,7 +431,7 @@ main (int argc, char** argv)
     }
 
     pcl::PCDWriter writer;
-    PCL_INFO ("Wrote %zu points (%d x %d) to %s\n", cloud.points.size (), cloud.width, cloud.height, fname.c_str ());
+    PCL_INFO ("Wrote %lu points (%d x %d) to %s\n", cloud.points.size (), cloud.width, cloud.height, fname.c_str ());
     writer.writeBinaryCompressed (fname.c_str (), cloud);
   } // sphere
   return (0);

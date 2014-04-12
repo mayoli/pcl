@@ -157,7 +157,7 @@ namespace pcl
 
         if (indices_->size () > input_->points.size ())
         {
-          PCL_ERROR ("[pcl::SampleConsensusModel] Invalid index vector given with size %zu while the input PointCloud has size %zu!\n", indices_->size (), input_->points.size ());
+          PCL_ERROR ("[pcl::SampleConsensusModel] Invalid index vector given with size %lu while the input PointCloud has size %lu!\n", indices_->size (), input_->points.size ());
           indices_->clear ();
         }
         shuffled_indices_ = *indices_;
@@ -180,7 +180,7 @@ namespace pcl
         // We're assuming that indices_ have already been set in the constructor
         if (indices_->size () < getSampleSize ())
         {
-          PCL_ERROR ("[pcl::SampleConsensusModel::getSamples] Can not select %zu unique points out of %zu!\n",
+          PCL_ERROR ("[pcl::SampleConsensusModel::getSamples] Can not select %lu unique points out of %lu!\n",
                      samples.size (), indices_->size ());
           // one of these will make it stop :)
           samples.clear ();
@@ -201,7 +201,7 @@ namespace pcl
           // If it's a good sample, stop here
           if (isSampleGood (samples))
           {
-            PCL_DEBUG ("[pcl::SampleConsensusModel::getSamples] Selected %zu samples.\n", samples.size ());
+            PCL_DEBUG ("[pcl::SampleConsensusModel::getSamples] Selected %lu samples.\n", samples.size ());
             return;
           }
         }
@@ -466,14 +466,19 @@ namespace pcl
         std::vector<int> indices;
         std::vector<float> sqr_dists;
 
-        samples_radius_search_->radiusSearch (shuffled_indices_[0], samples_radius_,
-                                              indices, sqr_dists );
+        // If indices have been set when the search object was constructed,
+        // radiusSearch() expects an index into the indices vector as its
+        // first parameter. This can't be determined efficiently, so we use
+        // the point instead of the index.
+        // Returned indices are converted automatically.
+        samples_radius_search_->radiusSearch (input_->at(shuffled_indices_[0]),
+                                              samples_radius_, indices, sqr_dists );
 
         if (indices.size () < sample_size - 1)
         {
           // radius search failed, make an invalid model
           for(unsigned int i = 1; i < sample_size; ++i)
-        	shuffled_indices_[i] = shuffled_indices_[0];
+            shuffled_indices_[i] = shuffled_indices_[0];
         }
         else
         {

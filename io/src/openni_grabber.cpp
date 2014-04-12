@@ -555,8 +555,8 @@ pcl::OpenNIGrabber::convertToXYZPointCloud (const boost::shared_ptr<openni_wrapp
 
   register float constant_x = 1.0f / device_->getDepthFocalLength (depth_width_);
   register float constant_y = 1.0f / device_->getDepthFocalLength (depth_width_);
-  register float centerX = float (cloud->width >> 1);
-  register float centerY = float (cloud->height >> 1);
+  register float centerX = ((float)cloud->width - 1.f) / 2.f;
+  register float centerY = ((float)cloud->height - 1.f) / 2.f;
 
   if (pcl_isfinite (depth_focal_length_x_))
     constant_x =  1.0f / static_cast<float> (depth_focal_length_x_);
@@ -595,9 +595,9 @@ pcl::OpenNIGrabber::convertToXYZPointCloud (const boost::shared_ptr<openni_wrapp
   }
 
   register int depth_idx = 0;
-  for (int v = 0; v < depth_height_; ++v)
+  for (unsigned int v = 0; v < depth_height_; ++v)
   {
-    for (register int u = 0; u < depth_width_; ++u, ++depth_idx)
+    for (register unsigned int u = 0; u < depth_width_; ++u, ++depth_idx)
     {
       pcl::PointXYZ& pt = cloud->points[depth_idx];
       // Check for invalid measurements
@@ -615,8 +615,8 @@ pcl::OpenNIGrabber::convertToXYZPointCloud (const boost::shared_ptr<openni_wrapp
     }
   }
   cloud->sensor_origin_.setZero ();
-  cloud->sensor_orientation_.w () = 0.0f;
-  cloud->sensor_orientation_.x () = 1.0f;
+  cloud->sensor_orientation_.w () = 1.0f;
+  cloud->sensor_orientation_.x () = 0.0f;
   cloud->sensor_orientation_.y () = 0.0f;
   cloud->sensor_orientation_.z () = 0.0f;  
   return (cloud);
@@ -643,8 +643,8 @@ pcl::OpenNIGrabber::convertToXYZRGBPointCloud (const boost::shared_ptr<openni_wr
   //float constant = 1.0f / device_->getImageFocalLength (depth_width_);
   register float constant_x = 1.0f / device_->getImageFocalLength (depth_width_);
   register float constant_y = 1.0f / device_->getImageFocalLength (depth_width_);
-  register float centerX = float (depth_width_ >> 1);
-  register float centerY = float (depth_height_ >> 1);
+  register float centerX = ((float)cloud->width - 1.f) / 2.f;
+  register float centerY = ((float)cloud->height - 1.f) / 2.f;
 
   if (pcl_isfinite (rgb_focal_length_x_))
     constant_x =  1.0f / static_cast<float> (rgb_focal_length_x_);
@@ -700,9 +700,9 @@ pcl::OpenNIGrabber::convertToXYZRGBPointCloud (const boost::shared_ptr<openni_wr
   
   int value_idx = 0;
   int point_idx = 0;
-  for (int v = 0; v < depth_height_; ++v, point_idx += skip)
+  for (unsigned int v = 0; v < depth_height_; ++v, point_idx += skip)
   {
-    for (register int u = 0; u < depth_width_; ++u, ++value_idx, point_idx += step)
+    for (register unsigned int u = 0; u < depth_width_; ++u, ++value_idx, point_idx += step)
     {
       PointT& pt = cloud->points[point_idx];
       /// @todo Different values for these cases
@@ -746,8 +746,8 @@ pcl::OpenNIGrabber::convertToXYZRGBPointCloud (const boost::shared_ptr<openni_wr
     }
   }
   cloud->sensor_origin_.setZero ();
-  cloud->sensor_orientation_.w () = 0.0;
-  cloud->sensor_orientation_.x () = 1.0;
+  cloud->sensor_orientation_.w () = 1.0;
+  cloud->sensor_orientation_.x () = 0.0;
   cloud->sensor_orientation_.y () = 0.0;
   cloud->sensor_orientation_.z () = 0.0;
   return (cloud);
@@ -770,8 +770,8 @@ pcl::OpenNIGrabber::convertToXYZIPointCloud (const boost::shared_ptr<openni_wrap
   //float constant = 1.0f / device_->getImageFocalLength (cloud->width);
   register float constant_x = 1.0f / device_->getImageFocalLength (cloud->width);
   register float constant_y = 1.0f / device_->getImageFocalLength (cloud->width);
-  register float centerX = float (cloud->width >> 1);
-  register float centerY = float (cloud->height >> 1);
+  register float centerX = ((float)cloud->width - 1.f) / 2.f;
+  register float centerY = ((float)cloud->height - 1.f) / 2.f;
 
   if (pcl_isfinite (rgb_focal_length_x_))
     constant_x =  1.0f / static_cast<float> (rgb_focal_length_x_);
@@ -811,9 +811,9 @@ pcl::OpenNIGrabber::convertToXYZIPointCloud (const boost::shared_ptr<openni_wrap
   register int depth_idx = 0;
   float bad_point = std::numeric_limits<float>::quiet_NaN ();
 
-  for (int v = 0; v < depth_height_; ++v)
+  for (unsigned int v = 0; v < depth_height_; ++v)
   {
-    for (register int u = 0; u < depth_width_; ++u, ++depth_idx)
+    for (register unsigned int u = 0; u < depth_width_; ++u, ++depth_idx)
     {
       pcl::PointXYZI& pt = cloud->points[depth_idx];
       /// @todo Different values for these cases
@@ -836,8 +836,8 @@ pcl::OpenNIGrabber::convertToXYZIPointCloud (const boost::shared_ptr<openni_wrap
     }
   }
   cloud->sensor_origin_.setZero ();
-  cloud->sensor_orientation_.w () = 0.0;
-  cloud->sensor_orientation_.x () = 1.0;
+  cloud->sensor_orientation_.w () = 1.0;
+  cloud->sensor_orientation_.x () = 0.0;
   cloud->sensor_orientation_.y () = 0.0;
   cloud->sensor_orientation_.z () = 0.0;
   return (cloud);

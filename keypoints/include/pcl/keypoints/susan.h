@@ -77,6 +77,7 @@ namespace pcl
       using Keypoint<PointInT, PointOutT>::k_;
       using Keypoint<PointInT, PointOutT>::search_radius_;
       using Keypoint<PointInT, PointOutT>::search_parameter_;
+      using Keypoint<PointInT, PointOutT>::keypoints_indices_;
       using Keypoint<PointInT, PointOutT>::initCompute;
 
       /** \brief Constructor
@@ -193,7 +194,7 @@ namespace pcl
         */
       int label_idx_;
       /** \brief The list of fields present in the output point cloud data. */
-      std::vector<sensor_msgs::PointField> out_fields_;
+      std::vector<pcl::PCLPointField> out_fields_;
       pcl::common::IntensityFieldAccessor<PointOutT> intensity_out_;
   };
 }

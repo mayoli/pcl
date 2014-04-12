@@ -46,7 +46,10 @@
 #include <pcl/common/transforms.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/filters/voxel_grid_occlusion_estimation.h>
-
+#include <vtkCubeSource.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkLine.h>
 
 using namespace pcl;
@@ -170,7 +173,7 @@ int main (int argc, char** argv)
   }
   else
   {
-    print_error ("Leaf size must be specified with either 1 or 3 numbers (%zu given).\n", values.size ());
+    print_error ("Leaf size must be specified with either 1 or 3 numbers (%lu given).\n", values.size ());
   }
   print_info ("Using a leaf size of: "); print_value ("%f, %f, %f\n", leaf_x, leaf_y, leaf_z);
 

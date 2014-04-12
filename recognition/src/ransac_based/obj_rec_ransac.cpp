@@ -334,7 +334,7 @@ pcl::recognition::ObjRecRANSAC::groupHypotheses(list<HypothesisBase>& hypotheses
   int num_accepted = 0;
 
 #ifdef OBJ_REC_RANSAC_VERBOSE
-  printf("done\n  testing the cluster representatives ...\n", __func__); fflush (stdout);
+  printf("ObjRecRANSAC::%s(): done\n  testing the cluster representatives ...\n", __func__); fflush (stdout);
   // These are some variables needed when printing the recognition progress
   float progress_factor = 100.0f/static_cast<float> (transform_space.getNumberOfOccupiedRotationSpaces ());
   int num_done = 0;
@@ -537,7 +537,7 @@ pcl::recognition::ObjRecRANSAC::buildGraphOfConflictingHypotheses (const BVHH& b
       }
 
       // Make sure that we do not compute the same set intersection twice
-      pair<set<ordered_int_pair>::iterator, bool> res = ordered_hypotheses_ids.insert (id_pair);
+      pair<set<ordered_int_pair, bool(*)(const ordered_int_pair&, const ordered_int_pair&)>::iterator, bool> res = ordered_hypotheses_ids.insert (id_pair);
 
       if ( res.second == false )
         continue; // We've already computed that set intersection -> check the next pair

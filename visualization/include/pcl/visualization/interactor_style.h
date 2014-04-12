@@ -3,6 +3,7 @@
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
  *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *  Copyright (c) 2012-, Open Perception, Inc.
  *
  *  All rights reserved.
  *
@@ -16,7 +17,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
+ *   * Neither the name of the copyright holder(s) nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -39,14 +40,23 @@
 #ifndef PCL_PCL_VISUALIZER_INTERACTOR_STYLE_H_
 #define PCL_PCL_VISUALIZER_INTERACTOR_STYLE_H_
 
-#include <pcl/visualization/vtk.h>
 #include <pcl/console/print.h>
 #include <pcl/visualization/common/actor_map.h>
 #include <pcl/visualization/common/ren_win_interact_map.h>
 #include <pcl/visualization/keyboard_event.h>
 #include <pcl/visualization/mouse_event.h>
 #include <pcl/visualization/point_picking_event.h>
-#include <pcl/visualization/boost.h>
+#include <pcl/visualization/area_picking_event.h>
+#include <boost/signals2/signal.hpp>
+
+#include <vtkInteractorStyleRubberBandPick.h>
+
+class vtkRendererCollection;
+class vtkLegendScaleActor;
+class vtkScalarBarActor;
+class vtkPNGWriter;
+class vtkWindowToImageFilter;
+class vtkPointPicker;
 
 namespace pcl
 {
@@ -87,11 +97,12 @@ namespace pcl
       * -        0..9 [+ CTRL]  : switch between different color handlers (where available)
       * - 
       * -  SHIFT + left click   : select a point
+      * -        x, X   : toggle rubber band selection mode for left mouse button
       *
       * \author Radu B. Rusu
       * \ingroup visualization
       */
-    class PCL_EXPORTS PCLVisualizerInteractorStyle : public vtkInteractorStyleTrackballCamera
+    class PCL_EXPORTS PCLVisualizerInteractorStyle : public vtkInteractorStyleRubberBandPick
     {
       typedef boost::shared_ptr<CloudActorMap> CloudActorMapPtr;
 
@@ -103,14 +114,15 @@ namespace pcl
           init_ (), rens_ (), actors_ (), win_height_ (), win_width_ (), win_pos_x_ (), win_pos_y_ (),
           max_win_height_ (), max_win_width_ (), grid_enabled_ (), grid_actor_ (), lut_enabled_ (),
           lut_actor_ (), snapshot_writer_ (), wif_ (), mouse_signal_ (), keyboard_signal_ (),
-          point_picking_signal_ (), stereo_anaglyph_mask_default_ (), mouse_callback_ (), modifier_ ()
+          point_picking_signal_ (), area_picking_signal_ (), stereo_anaglyph_mask_default_ (),
+          mouse_callback_ (), modifier_ ()
         {}
       
         /** \brief Empty destructor */
         virtual ~PCLVisualizerInteractorStyle () {}
 
         // this macro defines Superclass, the isA functionality and the safe downcast method
-        vtkTypeMacro (PCLVisualizerInteractorStyle, vtkInteractorStyleTrackballCamera);
+        vtkTypeMacro (PCLVisualizerInteractorStyle, vtkInteractorStyleRubberBandPick);
         
         /** \brief Initialization routine. Must be called before anything else. */
         virtual void 
@@ -158,6 +170,13 @@ namespace pcl
           */
         boost::signals2::connection 
         registerPointPickingCallback (boost::function<void (const pcl::visualization::PointPickingEvent&)> cb);
+
+        /** \brief Register a callback function for area picking events
+          * \param[in] cb a boost function that will be registered as a callback for a area picking event
+          * \return a connection object that allows to disconnect the callback function.
+          */
+        boost::signals2::connection
+        registerAreaPickingCallback (boost::function<void (const pcl::visualization::AreaPickingEvent&)> cb);
 
         /** \brief Save the current rendered image to disk, as a PNG screenshot.
           * \param[in] file the name of the PNG file
@@ -214,10 +233,13 @@ namespace pcl
         vtkSmartPointer<vtkPNGWriter> snapshot_writer_;
         /** \brief Internal window to image filter. Needed by \a snapshot_writer_. */
         vtkSmartPointer<vtkWindowToImageFilter> wif_;
+        /** \brief Stores the point picker when switching to an area picker. */
+        vtkSmartPointer<vtkPointPicker> point_picker_;
 
         boost::signals2::signal<void (const pcl::visualization::MouseEvent&)> mouse_signal_;
         boost::signals2::signal<void (const pcl::visualization::KeyboardEvent&)> keyboard_signal_;
         boost::signals2::signal<void (const pcl::visualization::PointPickingEvent&)> point_picking_signal_;
+        boost::signals2::signal<void (const pcl::visualization::AreaPickingEvent&)> area_picking_signal_;
 
         /** \brief Interactor style internal method. Gets called whenever a key is pressed. */
         virtual void 

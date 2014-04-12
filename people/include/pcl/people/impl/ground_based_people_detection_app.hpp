@@ -49,6 +49,7 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::GroundBasedPeopleDetectionAp
   rgb_image_ = pcl::PointCloud<pcl::RGB>::Ptr(new pcl::PointCloud<pcl::RGB>);
 
   // set default values for optional parameters:
+  sampling_factor_ = 1;
   voxel_size_ = 0.06;
   vertical_ = false;
   head_centroid_ = true;
@@ -75,6 +76,12 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::setGround (Eigen::VectorXf& 
 {
   ground_coeffs_ = ground_coeffs;
   sqrt_ground_coeffs_ = (ground_coeffs - Eigen::Vector4f(0.0f, 0.0f, 0.0f, ground_coeffs(3))).norm();
+}
+
+template <typename PointT> void
+pcl::people::GroundBasedPeopleDetectionApp<PointT>::setSamplingFactor (int sampling_factor)
+{
+  sampling_factor_ = sampling_factor;
 }
 
 template <typename PointT> void
@@ -203,29 +210,29 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::swapDimensions (pcl::PointCl
   cloud = output_cloud;
 }
 
-template <typename PointT> void
+template <typename PointT> bool
 pcl::people::GroundBasedPeopleDetectionApp<PointT>::compute (std::vector<pcl::people::PersonCluster<PointT> >& clusters)
 {
   // Check if all mandatory variables have been set:
   if (sqrt_ground_coeffs_ != sqrt_ground_coeffs_)
   {
     PCL_ERROR ("[pcl::people::GroundBasedPeopleDetectionApp::compute] Floor parameters have not been set or they are not valid!\n");
-    return;
+    return (false);
   }
   if (cloud_ == NULL)
   {
     PCL_ERROR ("[pcl::people::GroundBasedPeopleDetectionApp::compute] Input cloud has not been set!\n");
-    return;
+    return (false);
   }
   if (intrinsics_matrix_(0) == 0)
   {
     PCL_ERROR ("[pcl::people::GroundBasedPeopleDetectionApp::compute] Camera intrinsic parameters have not been set!\n");
-    return;
+    return (false);
   }
   if (!person_classifier_set_flag_)
   {
     PCL_ERROR ("[pcl::people::GroundBasedPeopleDetectionApp::compute] Person classifier has not been set!\n");
-    return;
+    return (false);
   }
 
   if (!dimension_limits_set_)    // if dimension limits have not been set by the user
@@ -239,6 +246,24 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::compute (std::vector<pcl::pe
   // Fill rgb image:
   rgb_image_->points.clear();                            // clear RGB pointcloud
   extractRGBFromPointCloud(cloud_, rgb_image_);          // fill RGB pointcloud
+  
+  // Downsample of sampling_factor in every dimension:
+  if (sampling_factor_ != 1)
+  {
+    PointCloudPtr cloud_downsampled(new PointCloud);
+    cloud_downsampled->width = (cloud_->width)/sampling_factor_;
+    cloud_downsampled->height = (cloud_->height)/sampling_factor_;
+    cloud_downsampled->points.resize(cloud_downsampled->height*cloud_downsampled->width);
+    cloud_downsampled->is_dense = cloud_->is_dense;
+    for (int j = 0; j < cloud_downsampled->width; j++)
+    {
+      for (int i = 0; i < cloud_downsampled->height; i++)
+      {
+        (*cloud_downsampled)(j,i) = (*cloud_)(sampling_factor_*j,sampling_factor_*i);
+      }
+    }
+    (*cloud_) = (*cloud_downsampled);
+  }
 
   // Voxel grid filtering:
   PointCloudPtr cloud_filtered(new PointCloud);
@@ -257,10 +282,10 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::compute (std::vector<pcl::pe
   extract.setIndices(inliers);
   extract.setNegative(true);
   extract.filter(*no_ground_cloud_);
-  if((inliers->size() >= 300*0.06/voxel_size_))
-    ground_model->optimizeModelCoefficients(*inliers, ground_coeffs_, ground_coeffs_);
+  if (inliers->size () >= (300 * 0.06 / voxel_size_ / std::pow (static_cast<double> (sampling_factor_), 2)))
+    ground_model->optimizeModelCoefficients (*inliers, ground_coeffs_, ground_coeffs_);
   else
-    std::cout << "No groundplane update!" << std::endl;
+    PCL_INFO ("No groundplane update!\n");
 
   // Euclidean Clustering:
   std::vector<pcl::PointIndices> cluster_indices;
@@ -298,8 +323,10 @@ pcl::people::GroundBasedPeopleDetectionApp<PointT>::compute (std::vector<pcl::pe
     top /= top(2);
     Eigen::Vector3f bottom = intrinsics_matrix_ * (it->getTBottom());
     bottom /= bottom(2);
-    it->setPersonConfidence(person_classifier_.evaluate(rgb_image_, bottom, top, centroid, intrinsics_matrix_, vertical_));
+    it->setPersonConfidence(person_classifier_.evaluate(rgb_image_, bottom, top, centroid, vertical_));
   }
+ 
+  return (true);
 }
 
 template <typename PointT>

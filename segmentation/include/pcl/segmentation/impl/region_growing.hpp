@@ -285,19 +285,20 @@ pcl::RegionGrowing<PointT, NormalT>::extract (std::vector <pcl::PointIndices>& c
   applySmoothRegionGrowingAlgorithm ();
   assembleRegions ();
 
-  std::vector<pcl::PointIndices>::iterator cluster_iter = clusters_.begin ();
-  while (cluster_iter != clusters_.end ())
+  clusters.resize (clusters_.size ());
+  std::vector<pcl::PointIndices>::iterator cluster_iter_input = clusters.begin ();
+  for (std::vector<pcl::PointIndices>::const_iterator cluster_iter = clusters_.begin (); cluster_iter != clusters_.end (); cluster_iter++)
   {
-    if (cluster_iter->indices.size () < min_pts_per_cluster_ || cluster_iter->indices.size () > max_pts_per_cluster_)
+    if ((static_cast<int> (cluster_iter->indices.size ()) >= min_pts_per_cluster_) &&
+        (static_cast<int> (cluster_iter->indices.size ()) <= max_pts_per_cluster_))
     {
-      cluster_iter = clusters_.erase (cluster_iter);
+      *cluster_iter_input = *cluster_iter;
+      cluster_iter_input++;
     }
-	else
-      cluster_iter++;
   }
 
-  clusters.reserve (clusters_.size ());
-  std::copy (clusters_.begin (), clusters_.end (), std::back_inserter (clusters));
+  clusters_ = std::vector<pcl::PointIndices> (clusters.begin (), cluster_iter_input);
+  clusters.resize(clusters_.size());
 
   deinitCompute ();
 }
@@ -357,13 +358,27 @@ pcl::RegionGrowing<PointT, NormalT>::findPointNeighbours ()
   std::vector<float> distances;
 
   point_neighbours_.resize (input_->points.size (), neighbours);
-
-  for (int i_point = 0; i_point < point_number; i_point++)
+  if (input_->is_dense)
   {
-    int point_index = (*indices_)[i_point];
-    neighbours.clear ();
-    search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
-    point_neighbours_[point_index].swap (neighbours);
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      int point_index = (*indices_)[i_point];
+      neighbours.clear ();
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
+  }
+  else
+  {
+    for (int i_point = 0; i_point < point_number; i_point++)
+    {
+      neighbours.clear ();
+      int point_index = (*indices_)[i_point];
+      if (!pcl::isFinite (input_->points[point_index]))
+        continue;
+      search_->nearestKSearch (i_point, neighbour_number_, neighbours, distances);
+      point_neighbours_[point_index].swap (neighbours);
+    }
   }
 }
 
@@ -537,7 +552,7 @@ pcl::RegionGrowing<PointT, NormalT>::assembleRegions ()
   pcl::PointIndices segment;
   clusters_.resize (number_of_segments, segment);
 
-  for(int i_seg = 0; i_seg < number_of_segments; i_seg++)
+  for (int i_seg = 0; i_seg < number_of_segments; i_seg++)
   {
     clusters_[i_seg].indices.resize ( num_pts_in_segment_[i_seg], 0);
   }
@@ -575,7 +590,7 @@ pcl::RegionGrowing<PointT, NormalT>::getSegmentFromPoint (int index, pcl::PointI
   // first of all we need to find out if this point belongs to cloud
   bool point_was_found = false;
   int number_of_points = static_cast <int> (indices_->size ());
-  for (size_t point = 0; point < number_of_points; point++)
+  for (int point = 0; point < number_of_points; point++)
     if ( (*indices_)[point] == index)
     {
       point_was_found = true;

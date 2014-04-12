@@ -37,7 +37,7 @@
 #ifndef PCL_STEREO_H_
 #define PCL_STEREO_H_
 
-#include <pcl/ros/conversions.h>
+#include <pcl/conversions.h>
 #include <pcl/point_types.h>
 
 namespace pcl
@@ -507,8 +507,6 @@ namespace pcl
       //Parameters for 2-pass SO optimization
       int smoothness_strong_;
       int smoothness_weak_;
-
-      double lut_[256];
   };
 }
 

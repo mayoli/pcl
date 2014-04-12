@@ -84,15 +84,15 @@ struct pcl::ImageGrabberBase::ImageGrabberImpl
   
   //! Get cloud at a particular location
   bool
-  getCloudAt (size_t idx, sensor_msgs::PointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, 
+  getCloudAt (size_t idx, pcl::PCLPointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation,
               double &fx, double &fy, double &cx, double &cy) const;
   
   //! Get cloud at a particular location
   bool
-  getCloudVTK (size_t idx, sensor_msgs::PointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation) const;
+  getCloudVTK (size_t idx, pcl::PCLPointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation) const;
   //! Get cloud at a particular location
   bool
-  getCloudPCLZF (size_t idx, sensor_msgs::PointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, 
+  getCloudPCLZF (size_t idx, pcl::PCLPointCloud2 &blob, Eigen::Vector4f &origin, Eigen::Quaternionf &orientation,
                  double &fx, double &fy, double &cx, double &cy) const;
 
   //! Scrapes a directory for image files which contain "rgb" or "depth" and
@@ -147,7 +147,7 @@ struct pcl::ImageGrabberBase::ImageGrabberImpl
 
   TimeTrigger time_trigger_;
 
-  sensor_msgs::PointCloud2 next_cloud_;
+  pcl::PCLPointCloud2 next_cloud_;
   //! Two cases, for depth only and depth+color
   pcl::PointCloud<pcl::PointXYZ> next_cloud_depth_;
   pcl::PointCloud<pcl::PointXYZRGBA> next_cloud_color_;
@@ -192,8 +192,8 @@ pcl::ImageGrabberBase::ImageGrabberImpl::ImageGrabberImpl (pcl::ImageGrabberBase
   , manual_intrinsics_ (false)
   , focal_length_x_ (525.)
   , focal_length_y_ (525.)
-  , principal_point_x_ (320.)
-  , principal_point_y_ (240.)
+  , principal_point_x_ (319.5)
+  , principal_point_y_ (239.5)
   , num_threads_ (1)
 {
   if(pclzf_mode_)
@@ -229,8 +229,8 @@ pcl::ImageGrabberBase::ImageGrabberImpl::ImageGrabberImpl (pcl::ImageGrabberBase
   , manual_intrinsics_ (false)
   , focal_length_x_ (525.)
   , focal_length_y_ (525.)
-  , principal_point_x_ (320.)
-  , principal_point_y_ (240.)
+  , principal_point_x_ (319.5)
+  , principal_point_y_ (239.5)
   , num_threads_ (1)
 {
   loadDepthAndRGBFiles (depth_dir, rgb_dir);
@@ -258,8 +258,8 @@ pcl::ImageGrabberBase::ImageGrabberImpl::ImageGrabberImpl (pcl::ImageGrabberBase
   , manual_intrinsics_ (false)
   , focal_length_x_ (525.)
   , focal_length_y_ (525.)
-  , principal_point_x_ (320.)
-  , principal_point_y_ (240.)
+  , principal_point_x_ (319.5)
+  , principal_point_y_ (239.5)
   , num_threads_ (1)
 {
   depth_image_files_ = depth_image_files;
@@ -517,7 +517,7 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getTimestampFromFilepath (
 /////////////////////////////////////////////////////////////////////////////
 bool
 pcl::ImageGrabberBase::ImageGrabberImpl::getCloudAt (size_t idx, 
-                                                     sensor_msgs::PointCloud2 &blob, 
+                                                     pcl::PCLPointCloud2 &blob,
                                                      Eigen::Vector4f &origin, 
                                                      Eigen::Quaternionf &orientation, 
                                                      double &fx, 
@@ -544,7 +544,7 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudAt (size_t idx,
 
 bool
 pcl::ImageGrabberBase::ImageGrabberImpl::getCloudVTK (size_t idx, 
-                                                      sensor_msgs::PointCloud2 &blob, 
+                                                      pcl::PCLPointCloud2 &blob,
                                                       Eigen::Vector4f &origin, 
                                                       Eigen::Quaternionf &orientation) const
 {
@@ -591,8 +591,8 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudVTK (size_t idx,
   {
     // The 525 factor default is only true for VGA. If not, we should scale
     scaleFactorX = scaleFactorY = 1/525.f * 640.f / static_cast<float> (dims[0]);
-    centerX = static_cast<float> (dims[0] >> 1);
-    centerY = static_cast<float> (dims[1] >> 1);
+    centerX = ((float)dims[0] - 1.f)/2.f;
+    centerY = ((float)dims[1] - 1.f)/2.f;
   }
 
   if(rgb_image_files_.size() > 0)
@@ -628,14 +628,10 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudVTK (size_t idx,
     uint64_t timestamp;
     if (getTimestampFromFilepath (depth_image_file, timestamp))
     {
-#ifdef USE_ROS
-      cloud_color.header.stamp.fromNSec (timestamp * 1000);
-#else
       cloud_color.header.stamp = timestamp;
-#endif //USE_ROS
     }
 
-    pcl::toROSMsg (cloud_color, blob);
+    pcl::toPCLPointCloud2 (cloud_color, blob);
   }
   else
   {
@@ -664,14 +660,10 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudVTK (size_t idx,
     uint64_t timestamp;
     if (getTimestampFromFilepath (depth_image_file, timestamp))
     {
-#ifdef USE_ROS
-      cloud.header.stamp.fromNSec (timestamp * 1000);
-#else
       cloud.header.stamp = timestamp;
-#endif //USE_ROS
     }
 
-    pcl::toROSMsg (cloud, blob);
+    pcl::toPCLPointCloud2 (cloud, blob);
   }
   // Origin 0, orientation is forward
   origin = Eigen::Vector4f::Zero ();
@@ -687,7 +679,7 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudVTK (size_t idx,
 
 bool
 pcl::ImageGrabberBase::ImageGrabberImpl::getCloudPCLZF (size_t idx, 
-                                                        sensor_msgs::PointCloud2 &blob, 
+                                                        pcl::PCLPointCloud2 &blob,
                                                         Eigen::Vector4f &origin, 
                                                         Eigen::Quaternionf &orientation, 
                                                         double &fx, 
@@ -759,13 +751,9 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudPCLZF (size_t idx,
     uint64_t timestamp;
     if (getTimestampFromFilepath (depth_pclzf_file, timestamp))
     {
-#ifdef USE_ROS
-      cloud_color.header.stamp.fromNSec (timestamp * 1000);
-#else
       cloud_color.header.stamp = timestamp;
-#endif //USE_ROS
     }
-    pcl::toROSMsg (cloud_color, blob);
+    pcl::toPCLPointCloud2 (cloud_color, blob);
   }
   else
   {
@@ -804,13 +792,9 @@ pcl::ImageGrabberBase::ImageGrabberImpl::getCloudPCLZF (size_t idx,
     uint64_t timestamp;
     if (getTimestampFromFilepath (depth_pclzf_file, timestamp))
     {
-#ifdef USE_ROS
-      cloud.header.stamp.fromNSec (timestamp * 1000);
-#else
       cloud.header.stamp = timestamp;
-#endif //USE_ROS
     }
-    pcl::toROSMsg (cloud, blob);
+    pcl::toPCLPointCloud2 (cloud, blob);
   }
 
   // Origin 0, orientation is forward
@@ -1040,7 +1024,7 @@ pcl::ImageGrabberBase::numFrames () const
 //////////////////////////////////////////////////////////////////////////////////////////
 bool
 pcl::ImageGrabberBase::getCloudAt (size_t idx,
-                                   sensor_msgs::PointCloud2 &blob, 
+                                   pcl::PCLPointCloud2 &blob,
                                    Eigen::Vector4f &origin, 
                                    Eigen::Quaternionf &orientation) const
 {
@@ -1062,7 +1046,11 @@ pcl::ImageGrabberBase::atLastFrame () const
 std::string
 pcl::ImageGrabberBase::getCurrentDepthFileName () const
 {
-  std::string pathname = impl_->depth_image_files_[impl_->cur_frame_];
+  std::string pathname;
+  if (impl_->pclzf_mode_)
+    pathname = impl_->depth_pclzf_files_[impl_->cur_frame_];
+  else
+    pathname = impl_->depth_image_files_[impl_->cur_frame_];
   std::string basename = boost::filesystem::basename (pathname);
   return (basename);
 }
@@ -1070,7 +1058,24 @@ pcl::ImageGrabberBase::getCurrentDepthFileName () const
 std::string
 pcl::ImageGrabberBase::getPrevDepthFileName () const
 {
-  std::string pathname = impl_->depth_image_files_[impl_->cur_frame_-1];
+  std::string pathname;
+  if (impl_->pclzf_mode_)
+    pathname = impl_->depth_pclzf_files_[impl_->cur_frame_-1];
+  else
+    pathname = impl_->depth_image_files_[impl_->cur_frame_-1];
+  std::string basename = boost::filesystem::basename (pathname);
+  return (basename);
+}
+    
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string
+pcl::ImageGrabberBase::getDepthFileNameAtIndex (size_t idx) const
+{
+  std::string pathname;
+  if (impl_->pclzf_mode_)
+    pathname = impl_->depth_pclzf_files_[idx];
+  else
+    pathname = impl_->depth_image_files_[idx];
   std::string basename = boost::filesystem::basename (pathname);
   return (basename);
 }

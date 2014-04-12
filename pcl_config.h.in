@@ -22,7 +22,7 @@
 
 #cmakedefine HAVE_CUDA 1
 
-#cmakedefine USE_ROS
+#cmakedefine HAVE_FZAPI 1
 
 // SSE macros
 #cmakedefine HAVE_POSIX_MEMALIGN
@@ -55,3 +55,7 @@
 #cmakedefine VERBOSITY_LEVEL_INFO
 #cmakedefine VERBOSITY_LEVEL_DEBUG
 #cmakedefine VERBOSITY_LEVEL_VERBOSE
+
+/* Address the cases where on MacOS and OpenGL and GLUT are not frameworks */
+#cmakedefine OPENGL_IS_A_FRAMEWORK
+#cmakedefine GLUT_IS_A_FRAMEWORK

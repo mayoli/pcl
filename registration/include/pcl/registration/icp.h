@@ -178,7 +178,7 @@ namespace pcl
       setInputSource (const PointCloudSourceConstPtr &cloud)
       {
         Registration<PointSource, PointTarget, Scalar>::setInputSource (cloud);
-        std::vector<sensor_msgs::PointField> fields;
+        std::vector<pcl::PCLPointField> fields;
         pcl::getFields (*cloud, fields);
         source_has_normals_ = false;
         for (size_t i = 0; i < fields.size (); ++i)
@@ -213,7 +213,7 @@ namespace pcl
       setInputTarget (const PointCloudTargetConstPtr &cloud)
       {
         Registration<PointSource, PointTarget, Scalar>::setInputTarget (cloud);
-        std::vector<sensor_msgs::PointField> fields;
+        std::vector<pcl::PCLPointField> fields;
         pcl::getFields (*cloud, fields);
         target_has_normals_ = false;
         for (size_t i = 0; i < fields.size (); ++i)
@@ -264,6 +264,10 @@ namespace pcl
       virtual void 
       computeTransformation (PointCloudSource &output, const Matrix4 &guess);
 
+      /** \brief Looks at the Estimators and Rejectors and determines whether their blob-setter methods need to be called */
+      virtual void
+      determineRequiredBlobData ();
+
       /** \brief XYZ fields offset. */
       size_t x_idx_offset_, y_idx_offset_, z_idx_offset_;
 
@@ -277,6 +281,9 @@ namespace pcl
       bool source_has_normals_;
       /** \brief Internal check whether target dataset has normals or not. */
       bool target_has_normals_;
+
+      /** \brief Checks for whether estimators and rejectors need various data */
+      bool need_source_blob_, need_target_blob_;
   };
 
   /** \brief @b IterativeClosestPointWithNormals is a special case of

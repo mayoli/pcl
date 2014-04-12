@@ -27,7 +27,7 @@ INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        = 
 STRIP_FROM_INC_PATH    = @STRIPPED_HEADERS@
-SHORT_NAMES            = NO
+SHORT_NAMES            = YES
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = NO
 MULTILINE_CPP_IS_BRIEF = NO
@@ -115,8 +115,7 @@ FILE_PATTERNS          = *.h \
                          *.hpp \
                          *.doxy
 RECURSIVE              = YES
-EXCLUDE                = */.svn \
-                         "@PCL_SOURCE_DIR@/cmake" \
+EXCLUDE                = "@PCL_SOURCE_DIR@/cmake" \
                          "@PCL_SOURCE_DIR@/3rdparty" \
                          "@PCL_SOURCE_DIR@/test" \
                          "@PCL_SOURCE_DIR@/android" \

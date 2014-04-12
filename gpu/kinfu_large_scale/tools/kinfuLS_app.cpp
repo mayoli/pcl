@@ -82,7 +82,6 @@ Work in progress: patch by Marco (AUG,19th 2012)
 #endif
 typedef pcl::ScopeTime ScopeTimeT;
 
-#include "../src/internal.h"
 #include <pcl/gpu/kinfu_large_scale/screenshot_manager.h>
 
 using namespace std;
@@ -229,7 +228,7 @@ boost::shared_ptr<pcl::PolygonMesh> convertToMesh(const DeviceArray<PointXYZ>& t
   triangles.download(cloud.points);
 
   boost::shared_ptr<pcl::PolygonMesh> mesh_ptr( new pcl::PolygonMesh() ); 
-  pcl::toROSMsg(cloud, mesh_ptr->cloud);  
+  pcl::toPCLPointCloud2(cloud, mesh_ptr->cloud);
 
   mesh_ptr->polygons.resize (triangles.size() / 3);
   for (size_t i = 0; i < mesh_ptr->polygons.size (); ++i)
@@ -253,7 +252,7 @@ struct CurrentFrameCloudView
 
     cloud_viewer_.setBackgroundColor (0, 0, 0.15);
     cloud_viewer_.setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 1);
-    cloud_viewer_.addCoordinateSystem (1.0);
+    cloud_viewer_.addCoordinateSystem (1.0, "global");
     cloud_viewer_.initCameraParameters ();
     cloud_viewer_.setPosition (0, 500);
     cloud_viewer_.setSize (640, 480);
@@ -394,7 +393,7 @@ struct SceneCloudView
     point_colors_ptr_ = PointCloud<RGB>::Ptr (new PointCloud<RGB>);
 
     cloud_viewer_.setBackgroundColor (0, 0, 0);
-    cloud_viewer_.addCoordinateSystem (1.0);
+    cloud_viewer_.addCoordinateSystem (1.0, "global");
     cloud_viewer_.initCameraParameters ();
     cloud_viewer_.setPosition (0, 500);
     cloud_viewer_.setSize (640, 480);
@@ -986,7 +985,7 @@ struct KinFuLSApp
     boost::function<void (const DepthImagePtr&)> func2 = boost::bind (&KinFuLSApp::source_cb1, this, _1);
     boost::function<void (const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr&) > func3 = boost::bind (&KinFuLSApp::source_cb3, this, _1);
 
-    bool need_colors = integrate_colors_ || registration_;
+    bool need_colors = integrate_colors_ || registration_ || enable_texture_extraction_;
 
     if ( pcd_source_ && !capture_.providesCallback<void (const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr&)>() ) {
       std::cout << "grabber doesn't provide pcl::PointCloud<pcl::PointXYZRGBA> callback !\n";
@@ -1029,19 +1028,22 @@ struct KinFuLSApp
   {      
     const SceneCloudView& view = scene_cloud_view_;
 
-    if(view.point_colors_ptr_->points.empty()) // no colors
+    if (!view.cloud_ptr_->points.empty ())
     {
-      if (view.valid_combined_)
-        writeCloudFile (format, view.combined_ptr_);
+      if(view.point_colors_ptr_->points.empty()) // no colors
+      {
+        if (view.valid_combined_)
+          writeCloudFile (format, view.combined_ptr_);
+        else
+          writeCloudFile (format, view.cloud_ptr_);
+      }
       else
-        writeCloudFile (format, view.cloud_ptr_);
-    }
-    else
-    {        
-      if (view.valid_combined_)
-        writeCloudFile (format, merge<PointXYZRGBNormal>(*view.combined_ptr_, *view.point_colors_ptr_));
-      else
-        writeCloudFile (format, merge<PointXYZRGB>(*view.cloud_ptr_, *view.point_colors_ptr_));
+      {        
+        if (view.valid_combined_)
+          writeCloudFile (format, merge<PointXYZRGBNormal>(*view.combined_ptr_, *view.point_colors_ptr_));
+        else
+          writeCloudFile (format, merge<PointXYZRGB>(*view.cloud_ptr_, *view.point_colors_ptr_));
+      }
     }
   }
 
@@ -1309,7 +1311,7 @@ main (int argc, char* argv[])
   pc::parse_argument (argc, argv, "--shifting_distance", shift_distance);
   pc::parse_argument (argc, argv, "-sd", shift_distance);
 
-  int snapshot_rate = pcl::device::kinfuLS::SNAPSHOT_RATE; // defined in internal.h
+  int snapshot_rate = pcl::device::kinfuLS::SNAPSHOT_RATE; // defined in device.h
   pc::parse_argument (argc, argv, "--snapshot_rate", snapshot_rate);
   pc::parse_argument (argc, argv, "-sr", snapshot_rate);
 

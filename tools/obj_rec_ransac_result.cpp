@@ -54,6 +54,10 @@
 #include <vtkDataArray.h>
 #include <vtkPointData.h>
 #include <vtkHedgeHog.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkTransform.h>
 #include <cstdio>
 #include <vector>
 #include <list>
@@ -347,7 +351,7 @@ loadScene (const char* file_name, PointCloud<PointXYZ>& non_plane_points, PointC
 
   for ( i = 0, j = 0, id = 0 ; i < inliers->indices.size () ; )
   {
-    if ( id == inliers->indices[i] )
+    if ( static_cast<int> (id) == inliers->indices[i] )
     {
       plane_points.points[i] = all_points->points[id];
       ++id;

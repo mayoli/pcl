@@ -49,10 +49,20 @@
 
 // need to include GLEW net the top to avoid linking errors FOR PCL::SIMULATION:
 #include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
-//
+
+#include <pcl/pcl_config.h>
+#ifdef OPENGL_IS_A_FRAMEWORK
+# include <OpenGL/gl.h>
+# include <OpenGL/glu.h>
+#else
+# include <GL/gl.h>
+# include <GL/glu.h>
+#endif
+#ifdef GLUT_IS_A_FRAMEWORK
+# include <GLUT/glut.h>
+#else
+# include <GL/glut.h>
+#endif
 
 #include <pcl/console/parse.h>
 #include <pcl/gpu/kinfu_large_scale/kinfu.h>
@@ -88,8 +98,6 @@ typedef pcl::gpu::ScopeTimerCV ScopeTimeT;
   typedef pcl::ScopeTime ScopeTimeT;
 #endif
 
-#include "../src/internal.h"
-  
 #include <Eigen/Dense>
 #include <cmath>
 #include <iostream>
@@ -548,7 +556,7 @@ boost::shared_ptr<pcl::PolygonMesh> convertToMesh(const DeviceArray<PointXYZ>& t
   triangles.download(cloud.points);
   
   boost::shared_ptr<pcl::PolygonMesh> mesh_ptr( new pcl::PolygonMesh() ); 
-  pcl::toROSMsg(cloud, mesh_ptr->cloud);  
+  pcl::toPCLPointCloud2(cloud, mesh_ptr->cloud);
       
   mesh_ptr->polygons.resize (triangles.size() / 3);
   for (size_t i = 0; i < mesh_ptr->polygons.size (); ++i)
@@ -1206,19 +1214,22 @@ struct KinFuApp
   {      
     const SceneCloudView& view = scene_cloud_view_;
 
-    if(view.point_colors_ptr_->points.empty()) // no colors
-    {
-      if (view.valid_combined_)
-        writeCloudFile (format, view.combined_ptr_);
+    if (!view.cloud_ptr_->points.empty ())
+    {    
+      if(view.point_colors_ptr_->points.empty()) // no colors
+      {
+        if (view.valid_combined_)
+          writeCloudFile (format, view.combined_ptr_);
+        else
+          writeCloudFile (format, view.cloud_ptr_);
+      }
       else
-        writeCloudFile (format, view.cloud_ptr_);
-    }
-    else
-    {        
-      if (view.valid_combined_)
-        writeCloudFile (format, merge<PointXYZRGBNormal>(*view.combined_ptr_, *view.point_colors_ptr_));
-      else
-        writeCloudFile (format, merge<PointXYZRGB>(*view.cloud_ptr_, *view.point_colors_ptr_));
+      {        
+        if (view.valid_combined_)
+          writeCloudFile (format, merge<PointXYZRGBNormal>(*view.combined_ptr_, *view.point_colors_ptr_));
+        else
+          writeCloudFile (format, merge<PointXYZRGB>(*view.cloud_ptr_, *view.point_colors_ptr_));
+      }
     }
   }
 

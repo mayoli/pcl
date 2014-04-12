@@ -1,7 +1,10 @@
 /*
  * Software License Agreement (BSD License)
  *
+ *  Point Cloud Library (PCL) - www.pointclouds.org
  *  Copyright (c) 2010, Willow Garage, Inc.
+ *  Copyright (c) 2012-, Open Perception, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +17,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
+ *   * Neither the name of the copyright holder(s) nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -31,29 +34,39 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id$
- *
  */
 
 #include <list>
 #include <pcl/visualization/common/io.h>
 #include <pcl/visualization/interactor_style.h>
+#include <vtkLODActor.h>
 #include <vtkPolyData.h>
-#include <vtkMapper.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkPointData.h>
 #include <vtkCellArray.h>
-#include <vtkAppendPolyData.h>
 #include <vtkTextProperty.h>
-#include <vtkAbstractPicker.h>
 #include <vtkAbstractPropPicker.h>
-#include <vtkPlanes.h>
-#include <vtkPointPicker.h>
-#include <vtkMatrix4x4.h>
-#include <vtkInteractorObserver.h>
 #include <vtkCamera.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkScalarBarActor.h>
+#include <vtkPNGWriter.h>
+#include <vtkWindowToImageFilter.h>
+#include <vtkRendererCollection.h>
+#include <vtkActorCollection.h>
+#include <vtkLegendScaleActor.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkObjectFactory.h>
+#include <vtkProperty.h>
+#include <vtkPointData.h>
+#include <vtkAssemblyPath.h>
+#include <vtkAbstractPicker.h>
+#include <vtkPointPicker.h>
+#include <vtkAreaPicker.h>
 
 #include <pcl/visualization/vtk/vtkVertexBufferObjectMapper.h>
+
+#define ORIENT_MODE 0
+#define SELECT_MODE 1
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 void
@@ -92,9 +105,13 @@ pcl::visualization::PCLVisualizerInteractorStyle::Initialize ()
 
   stereo_anaglyph_mask_default_ = true;
 
+  // Start in orient mode
+  Superclass::CurrentMode = ORIENT_MODE;
+
   // Add our own mouse callback before any user callback. Used for accurate point picking.
   mouse_callback_ = vtkSmartPointer<pcl::visualization::PointPickingCallback>::New ();
   AddObserver (vtkCommand::LeftButtonPressEvent, mouse_callback_);
+  AddObserver (vtkCommand::LeftButtonReleaseEvent, mouse_callback_);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,11 +199,12 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnChar ()
     case 'o': case 'O':
     case 'u': case 'U':
     case 'q': case 'Q':
+    case 'x': case 'X':
+    case 'r': case 'R':
     {
       break;
     }
-    // S and R have a special !ALT case
-    case 'r': case 'R':
+    // S have a special !ALT case
     case 's': case 'S':
     {
       if (!keymod)
@@ -220,6 +238,13 @@ boost::signals2::connection
 pcl::visualization::PCLVisualizerInteractorStyle::registerPointPickingCallback (boost::function<void (const pcl::visualization::PointPickingEvent&)> callback)
 {
   return (point_picking_signal_.connect (callback));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+boost::signals2::connection
+pcl::visualization::PCLVisualizerInteractorStyle::registerAreaPickingCallback (boost::function<void (const pcl::visualization::AreaPickingEvent&)> callback)
+{
+  return (area_picking_signal_.connect (callback));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +331,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
         act->geometry_handler_index_ = index;
 
         // Create the new geometry
-        PointCloudGeometryHandler<sensor_msgs::PointCloud2>::ConstPtr geometry_handler = act->geometry_handlers[index];
+        PointCloudGeometryHandler<pcl::PCLPointCloud2>::ConstPtr geometry_handler = act->geometry_handlers[index];
 
         // Use the handler to obtain the geometry
         vtkSmartPointer<vtkPoints> points;
@@ -352,7 +377,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
         act->color_handler_index_ = index;
 
         // Get the new color
-        PointCloudColorHandler<sensor_msgs::PointCloud2>::ConstPtr color_handler = act->color_handlers[index];
+        PointCloudColorHandler<pcl::PCLPointCloud2>::ConstPtr color_handler = act->color_handlers[index];
 
         vtkSmartPointer<vtkDataArray> scalars;
         color_handler->getColor (scalars);
@@ -427,7 +452,9 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
                   "    ALT + 0..9 [+ CTRL]  : switch between different geometric handlers (where available)\n"
                   "          0..9 [+ CTRL]  : switch between different color handlers (where available)\n"
                   "\n"
-                  "    SHIFT + left click   : select a point\n"
+                  "    SHIFT + left click   : select a point (start with -use_point_picking)\n"
+                  "\n"
+                  "          x, X   : toggle rubber band selection mode for left mouse button\n"
           );
       break;
     }
@@ -520,10 +547,13 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
       cam->GetViewUp (view);
       int *win_pos = Interactor->GetRenderWindow ()->GetPosition ();
       int *win_size = Interactor->GetRenderWindow ()->GetSize ();
-      std::cerr << clip[0]  << "," << clip[1]  << "/" << focal[0] << "," << focal[1] << "," << focal[2] << "/" <<
-                   pos[0]   << "," << pos[1]   << "," << pos[2]   << "/" << view[0]  << "," << view[1]  << "," << view[2] << "/" <<
-                   cam->GetViewAngle () / 180.0 * M_PI  << "/" << win_size[0] << "," << win_size[1] << "/" << win_pos[0] << "," << win_pos[1]
-                << endl;
+      std::cerr <<  "Clipping plane [near,far] "  << clip[0] << ", " << clip[1] << endl <<
+                    "Focal point [x,y,z] " << focal[0] << ", " << focal[1] << ", " << focal[2] << endl <<
+                    "Position [x,y,z] " << pos[0] << ", " << pos[1] << ", " << pos[2] << endl <<
+                    "View up [x,y,z] " << view[0]  << ", " << view[1]  << ", " << view[2] << endl <<
+                    "Camera view angle [degrees] " << cam->GetViewAngle () << endl <<
+                    "Window size [x,y] " << win_size[0] << ", " << win_size[1] << endl <<
+                    "Window position [x,y] " << win_pos[0] << ", " << win_pos[1] << endl;
       break;
     }
     case '=':
@@ -716,7 +746,13 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
     {
       if (!keymod)
       {
-        Superclass::OnKeyDown ();
+        FindPokedRenderer(Interactor->GetEventPosition ()[0], Interactor->GetEventPosition ()[1]);
+        if(CurrentRenderer != 0)
+          CurrentRenderer->ResetCamera ();
+        else
+          PCL_WARN ("no current renderer on the interactor style.");
+
+        CurrentRenderer->Render ();
         break;
       }
 
@@ -773,6 +809,25 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnKeyDown ()
       break;
     }
 
+    case 'x' : case 'X' :
+    {
+      CurrentMode = (CurrentMode == ORIENT_MODE) ? SELECT_MODE : ORIENT_MODE;
+      if (CurrentMode == SELECT_MODE)
+      {
+        // Save the point picker
+        point_picker_ = static_cast<vtkPointPicker*> (Interactor->GetPicker ());
+        // Switch for an area picker
+        vtkSmartPointer<vtkAreaPicker> area_picker = vtkSmartPointer<vtkAreaPicker>::New ();
+        Interactor->SetPicker (area_picker);
+      }
+      else
+      {
+        // Restore point picker
+        Interactor->SetPicker (point_picker_);
+      }
+      break;
+    }
+
     case 'q': case 'Q':
     {
       Interactor->ExitCallback ();
@@ -807,7 +862,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnMouseMove ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseMove, MouseEvent::NoButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseMove, MouseEvent::NoButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   Superclass::OnMouseMove ();
 }
@@ -822,12 +877,12 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnLeftButtonDown ()
 
   if (Interactor->GetRepeatCount () == 0)
   {
-    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   else
   {
-    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   Superclass::OnLeftButtonDown ();
@@ -839,7 +894,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnLeftButtonUp ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::LeftButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   Superclass::OnLeftButtonUp ();
 }
@@ -852,12 +907,12 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnMiddleButtonDown ()
   int y = this->Interactor->GetEventPosition()[1];
   if (Interactor->GetRepeatCount () == 0)
   {
-    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   else
   {
-    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   Superclass::OnMiddleButtonDown ();
@@ -869,7 +924,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnMiddleButtonUp ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::MiddleButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   Superclass::OnMiddleButtonUp ();
 }
@@ -882,12 +937,12 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnRightButtonDown ()
   int y = this->Interactor->GetEventPosition()[1];
   if (Interactor->GetRepeatCount () == 0)
   {
-    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseButtonPress, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   else
   {
-    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+    MouseEvent event (MouseEvent::MouseDblClick, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
     mouse_signal_ (event);
   }
   Superclass::OnRightButtonDown ();
@@ -899,7 +954,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnRightButtonUp ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseButtonRelease, MouseEvent::RightButton, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   Superclass::OnRightButtonUp ();
 }
@@ -910,7 +965,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnMouseWheelForward ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseScrollUp, MouseEvent::VScroll, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseScrollUp, MouseEvent::VScroll, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   if (Interactor->GetRepeatCount ())
     mouse_signal_ (event);
@@ -942,7 +997,7 @@ pcl::visualization::PCLVisualizerInteractorStyle::OnMouseWheelBackward ()
 {
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
-  MouseEvent event (MouseEvent::MouseScrollDown, MouseEvent::VScroll, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey ());
+  MouseEvent event (MouseEvent::MouseScrollDown, MouseEvent::VScroll, x, y, Interactor->GetAltKey (), Interactor->GetControlKey (), Interactor->GetShiftKey (), Superclass::CurrentMode);
   mouse_signal_ (event);
   if (Interactor->GetRepeatCount ())
     mouse_signal_ (event);

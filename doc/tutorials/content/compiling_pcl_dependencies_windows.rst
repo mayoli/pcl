@@ -63,8 +63,8 @@ compile a series of 3rd party library dependencies:
 .. note::
   
    Though not a dependency per se, don't forget that you also need the CMake
-   build system (http://www.cmake.org/), at least version **2.8.3**. A Subversion client for Windows, i.e. TortoiseSVN 
-   (http://tortoisesvn.tigris.org/), is also required to download the PCL source code.
+   build system (http://www.cmake.org/), at least version **2.8.3**. A Git
+   client for Windows is also required to download the PCL source code.
    
 Building dependencies
 ---------------------
@@ -158,6 +158,7 @@ like::
       + mpi
       +-- optional python bindings disabled since PYTHON_FOUND is false. 
       + tr1
+
 
     Now, click "Generate". A Visual Studio solution file will be genrated inside the build folder 
     (e.g. C:/PCL_dependencies/boost-cmake/build). Open the `Boost.sln` file, then right click on 

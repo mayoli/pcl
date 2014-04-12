@@ -60,7 +60,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovarian
 {
   if (k_correspondences_ > int (cloud->size ()))
   {
-    PCL_ERROR ("[pcl::GeneralizedIterativeClosestPoint::computeCovariances] Number or points in cloud (%zu) is less than k_correspondences_ (%zu)!\n", cloud->size (), k_correspondences_);
+    PCL_ERROR ("[pcl::GeneralizedIterativeClosestPoint::computeCovariances] Number or points in cloud (%lu) is less than k_correspondences_ (%lu)!\n", cloud->size (), k_correspondences_);
     return;
   }
 
@@ -360,9 +360,11 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeTransfor
   // Set the mahalanobis matrices to identity
   mahalanobis_.resize (N, Eigen::Matrix3d::Identity ());
   // Compute target cloud covariance matrices
-  computeCovariances<PointTarget> (target_, tree_, target_covariances_);
+  if (target_covariances_.empty ())
+    computeCovariances<PointTarget> (target_, tree_, target_covariances_);
   // Compute input cloud covariance matrices
-  computeCovariances<PointSource> (input_, tree_reciprocal_, input_covariances_);
+  if (input_covariances_.empty ())
+    computeCovariances<PointSource> (input_, tree_reciprocal_, input_covariances_);
 
   base_transformation_ = guess;
   nr_iterations_ = 0;

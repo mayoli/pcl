@@ -44,7 +44,7 @@
 
 #include <pcl/common/point_operators.h>
 #include <pcl/point_types.h>
-#include <pcl/ros/register_point_struct.h>
+#include <pcl/register_point_struct.h>
 
 namespace pcl
 {
@@ -220,10 +220,9 @@ namespace pcl
         getVoxelCentroids (typename OctreePointCloud<PointT, LeafContainerT, BranchContainerT>::AlignedPointTVector &voxel_centroid_list_arg) const;
 
         /** \brief Recursively explore the octree and output a PointT vector of centroids for all occupied voxels.
-         ** \param[in] binaryTreeOut_arg: binary output vector
           * \param[in] branch_arg: current branch node
+          * \param[in] key_arg: current key
           * \param[out] voxel_centroid_list_arg results are written to this vector of PointT elements
-          * \return number of occupied voxels
           */
         void
         getVoxelCentroidsRecursive (const BranchNode* branch_arg, 

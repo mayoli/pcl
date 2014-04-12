@@ -37,7 +37,7 @@
 
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/io/impl/vtk_lib_io.hpp>
-#include <sensor_msgs/PointCloud2.h>
+#include <pcl/PCLPointCloud2.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <vtkDoubleArray.h>
@@ -51,19 +51,19 @@ pcl::io::loadPolygonFile (const std::string &file_name, pcl::PolygonMesh& mesh)
 {
   std::string extension = file_name.substr (file_name.find_last_of (".") + 1);
 
-  if (extension == ".pcd") // no Polygon, but only a point cloud
+  if (extension == "pcd") // no Polygon, but only a point cloud
   {
     pcl::io::loadPCDFile (file_name, mesh.cloud);
     mesh.polygons.resize (0);
     return (static_cast<int> (mesh.cloud.width * mesh.cloud.height));
   }
-  else if (extension == ".vtk")
+  else if (extension == "vtk")
    return (pcl::io::loadPolygonFileVTK (file_name, mesh));
-  else if (extension == ".ply")
+  else if (extension == "ply")
    return (pcl::io::loadPolygonFilePLY (file_name, mesh));
-  else if (extension == ".obj")
+  else if (extension == "obj")
     return (pcl::io::loadPolygonFileOBJ (file_name, mesh));
-  else if (extension == ".stl" )
+  else if (extension == "stl" )
     return (pcl::io::loadPolygonFileSTL (file_name, mesh));
   else
   {
@@ -80,18 +80,18 @@ pcl::io::savePolygonFile (const std::string &file_name, const pcl::PolygonMesh& 
   // TODO: what about sensor position and orientation?!?!?!?
   // TODO: how to adequately catch exceptions thrown by the vtk writers?!
   std::string extension = file_name.substr (file_name.find_last_of (".") + 1);
-  if (extension == ".pcd") // no Polygon, but only a point cloud
+  if (extension == "pcd") // no Polygon, but only a point cloud
   {
     int error_code = pcl::io::savePCDFile (file_name, mesh.cloud);
     if (error_code != 0)
       return (0);
     return (static_cast<int> (mesh.cloud.width * mesh.cloud.height));
   }
-  else if (extension == ".vtk")
+  else if (extension == "vtk")
    return (pcl::io::savePolygonFileVTK (file_name, mesh));
-  else if (extension == ".ply")
+  else if (extension == "ply")
    return (pcl::io::savePolygonFilePLY (file_name, mesh));
-  else if (extension == ".stl" )
+  else if (extension == "stl" )
     return (pcl::io::savePolygonFileSTL (file_name, mesh));
   else
   {
@@ -250,7 +250,7 @@ pcl::io::vtk2mesh (const vtkSmartPointer<vtkPolyData>& poly_data, pcl::PolygonMe
     xyz_cloud->points[i].z = static_cast<float> (point_xyz[2]);
   }
   // And put it in the mesh cloud
-  pcl::toROSMsg (*xyz_cloud, mesh.cloud);
+  pcl::toPCLPointCloud2 (*xyz_cloud, mesh.cloud);
 
 
   // Then the color information, if any
@@ -283,9 +283,9 @@ pcl::io::vtk2mesh (const vtkSmartPointer<vtkPolyData>& poly_data, pcl::PolygonMe
       rgb_cloud->points[i].b = point_color[2];
     }
 
-    sensor_msgs::PointCloud2 rgb_cloud2;
-    pcl::toROSMsg (*rgb_cloud, rgb_cloud2);
-    sensor_msgs::PointCloud2 aux;
+    pcl::PCLPointCloud2 rgb_cloud2;
+    pcl::toPCLPointCloud2 (*rgb_cloud, rgb_cloud2);
+    pcl::PCLPointCloud2 aux;
     pcl::concatenateFields (rgb_cloud2, mesh.cloud, aux);
     mesh.cloud = aux;
   }
@@ -312,9 +312,9 @@ pcl::io::vtk2mesh (const vtkSmartPointer<vtkPolyData>& poly_data, pcl::PolygonMe
       normal_cloud->points[i].normal_z = normal[2];
     }
 
-    sensor_msgs::PointCloud2 normal_cloud2;
-    pcl::toROSMsg (*normal_cloud, normal_cloud2);
-    sensor_msgs::PointCloud2 aux;
+    pcl::PCLPointCloud2 normal_cloud2;
+    pcl::toPCLPointCloud2 (*normal_cloud, normal_cloud2);
+    pcl::PCLPointCloud2 aux;
     pcl::concatenateFields (normal_cloud2, mesh.cloud, aux);
     mesh.cloud = aux;
   }
@@ -517,7 +517,7 @@ pcl::io::saveRangeImagePlanarFilePNG (
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
-pcl::io::pointCloudTovtkPolyData(const sensor_msgs::PointCloud2Ptr& cloud, vtkSmartPointer<vtkPolyData>& poly_data)
+pcl::io::pointCloudTovtkPolyData(const pcl::PCLPointCloud2Ptr& cloud, vtkSmartPointer<vtkPolyData>& poly_data)
 {
   if (!poly_data.GetPointer())
     poly_data = vtkSmartPointer<vtkPolyData>::New (); // OR poly_data->Reset();
