@@ -239,7 +239,7 @@ namespace pcl
 		Eigen::Vector4f pt (model_->input_->points[(*model_->tmp_inliers_)[i]].x, model_->input_->points[(*model_->tmp_inliers_)[i]].y, model_->input_->points[(*model_->tmp_inliers_)[i]].z, 1);
 		std::vector<float> distance(3);
 		
-		// Calculate the angular distance between the point normal and the plane normal
+		// Calculate the distance between the point normal and the plane normal
 		distance.at(0) = fabs(planeCoefficients.at(0).dot (pt));
 		distance.at(1) = fabs(planeCoefficients.at(1).dot (pt));
 		distance.at(2) = fabs(planeCoefficients.at(2).dot (pt));

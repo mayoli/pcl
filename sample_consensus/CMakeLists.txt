@@ -28,67 +28,6 @@ if(build)
         )
 
     set(incs 
-<<<<<<< .merge_file_XqJoVI
-        include/pcl/${SUBSYS_NAME}/boost.h
-        include/pcl/${SUBSYS_NAME}/eigen.h
-        include/pcl/${SUBSYS_NAME}/lmeds.h
-        include/pcl/${SUBSYS_NAME}/method_types.h
-        include/pcl/${SUBSYS_NAME}/mlesac.h
-        include/pcl/${SUBSYS_NAME}/model_types.h
-        include/pcl/${SUBSYS_NAME}/msac.h
-        include/pcl/${SUBSYS_NAME}/ransac.h
-        include/pcl/${SUBSYS_NAME}/rmsac.h
-        include/pcl/${SUBSYS_NAME}/rransac.h
-        include/pcl/${SUBSYS_NAME}/prosac.h
-        include/pcl/${SUBSYS_NAME}/sac.h
-        include/pcl/${SUBSYS_NAME}/sac_model.h
-        include/pcl/${SUBSYS_NAME}/sac_model_circle.h
-        include/pcl/${SUBSYS_NAME}/sac_model_circle3d.h
-        include/pcl/${SUBSYS_NAME}/sac_model_cylinder.h
-        include/pcl/${SUBSYS_NAME}/sac_model_cone.h
-        include/pcl/${SUBSYS_NAME}/sac_model_line.h
-        include/pcl/${SUBSYS_NAME}/sac_model_stick.h
-        include/pcl/${SUBSYS_NAME}/sac_model_normal_parallel_plane.h
-        include/pcl/${SUBSYS_NAME}/sac_model_normal_plane.h
-        include/pcl/${SUBSYS_NAME}/sac_model_normal_sphere.h
-        include/pcl/${SUBSYS_NAME}/sac_model_parallel_line.h
-        include/pcl/${SUBSYS_NAME}/sac_model_parallel_plane.h
-        include/pcl/${SUBSYS_NAME}/sac_model_perpendicular_plane.h
-        include/pcl/${SUBSYS_NAME}/sac_model_plane.h
-        include/pcl/${SUBSYS_NAME}/sac_model_registration.h
-        include/pcl/${SUBSYS_NAME}/sac_model_registration_2d.h
-        include/pcl/${SUBSYS_NAME}/sac_model_sphere.h
-		include/pcl/${SUBSYS_NAME}/sac_model_2_orthogonal_planes.h
-		include/pcl/${SUBSYS_NAME}/sac_model_3_orthogonal_planes.h
-        )
-
-    set(impl_incs 
-        include/pcl/${SUBSYS_NAME}/impl/lmeds.hpp
-        include/pcl/${SUBSYS_NAME}/impl/mlesac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/msac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/ransac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/rmsac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/rransac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/prosac.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_circle.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_circle3d.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_cylinder.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_cone.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_line.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_stick.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_normal_parallel_plane.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_normal_plane.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_normal_sphere.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_parallel_line.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_parallel_plane.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_perpendicular_plane.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_plane.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_registration.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_registration_2d.hpp
-        include/pcl/${SUBSYS_NAME}/impl/sac_model_sphere.hpp
-		include/pcl/${SUBSYS_NAME}/impl/sac_model_2_orthogonal_planes.hpp
-		include/pcl/${SUBSYS_NAME}/impl/sac_model_3_orthogonal_planes.hpp
-=======
         "include/pcl/${SUBSYS_NAME}/boost.h"
         "include/pcl/${SUBSYS_NAME}/eigen.h"
         "include/pcl/${SUBSYS_NAME}/lmeds.h"
@@ -118,6 +57,8 @@ if(build)
         "include/pcl/${SUBSYS_NAME}/sac_model_registration.h"
         "include/pcl/${SUBSYS_NAME}/sac_model_registration_2d.h"
         "include/pcl/${SUBSYS_NAME}/sac_model_sphere.h"
+		"include/pcl/${SUBSYS_NAME}/sac_model_2_orthogonal_planes.h"
+		"include/pcl/${SUBSYS_NAME}/sac_model_3_orthogonal_planes.h"
         )
 
     set(impl_incs 
@@ -144,7 +85,8 @@ if(build)
         "include/pcl/${SUBSYS_NAME}/impl/sac_model_registration.hpp"
         "include/pcl/${SUBSYS_NAME}/impl/sac_model_registration_2d.hpp"
         "include/pcl/${SUBSYS_NAME}/impl/sac_model_sphere.hpp"
->>>>>>> .merge_file_I137u9
+		"include/pcl/${SUBSYS_NAME}/impl/sac_model_2_orthogonal_planes.hpp"
+		"include/pcl/${SUBSYS_NAME}/impl/sac_model_3_orthogonal_planes.hpp"
         )
 
     set(LIB_NAME "pcl_${SUBSYS_NAME}")

@@ -201,12 +201,15 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::getDistancesToM
 	//rotationQuaternion.normalize ();
 	Eigen::Matrix3f rotationMatrix = rotationQuaternion.toRotationMatrix ();
 	
-	std::vector<Eigen::Vector4f> planeCoefficients (3);
+	std::vector<Eigen::Vector4f> planeCoefficients (3), planeNormals(3);
 	
 	planeCoefficients.at(0) = (Eigen::Vector4f (rotationMatrix.coeff(0,0),rotationMatrix.coeff(1,0),rotationMatrix.coeff(2,0), -(rotationMatrix.coeff(0,0)*model_coefficients[0] + rotationMatrix.coeff(1,0)*model_coefficients[1] + rotationMatrix.coeff(2,0)*model_coefficients[2]) ) );
 	planeCoefficients.at(1) = (Eigen::Vector4f (rotationMatrix.coeff(0,1),rotationMatrix.coeff(1,1),rotationMatrix.coeff(2,1), -(rotationMatrix.coeff(0,1)*model_coefficients[0] + rotationMatrix.coeff(1,1)*model_coefficients[1] + rotationMatrix.coeff(2,1)*model_coefficients[2]) ) );
 	planeCoefficients.at(2) = (Eigen::Vector4f (rotationMatrix.coeff(0,2),rotationMatrix.coeff(1,2),rotationMatrix.coeff(2,2), -(rotationMatrix.coeff(0,2)*model_coefficients[0] + rotationMatrix.coeff(1,2)*model_coefficients[1] + rotationMatrix.coeff(2,2)*model_coefficients[2]) ) );
 	
+	planeNormals.at(0) = (Eigen::Vector4f(rotationMatrix.coeff(0, 0), rotationMatrix.coeff(1, 0), rotationMatrix.coeff(2, 0), 0 ));
+	planeNormals.at(1) = (Eigen::Vector4f(rotationMatrix.coeff(0, 1), rotationMatrix.coeff(1, 1), rotationMatrix.coeff(2, 1), 0 ));
+	planeNormals.at(2) = (Eigen::Vector4f(rotationMatrix.coeff(0, 2), rotationMatrix.coeff(1, 2), rotationMatrix.coeff(2, 2), 0 ));
 	
 	// the model coefficients (Tx, Ty, Tz, Qx, Qy, Qz, Qw)
 	for (size_t i = 0 ; i < indices_->size () ; i++ )
@@ -224,15 +227,15 @@ pcl::SampleConsensusModelThreeOrthogonalPlanes<PointT, PointNT>::getDistancesToM
 		std::vector<double> distance(3);
 		
 		// Calculate the angular distance between the point normal and the plane normal
-		double d_normal = fabs (getAngle3D (n, planeCoefficients[0]));
+		double d_normal = fabs(getAngle3D(n, planeNormals[0]));
 		d_normal = (std::min) (d_normal, M_PI - d_normal);
 		distance.at(0) = fabs (weight * d_normal + (1.0 - weight) * fabs (planeCoefficients.at(0).dot (pt) ));
 
-		d_normal = fabs (getAngle3D (n, planeCoefficients[1]));
+		d_normal = fabs(getAngle3D(n, planeNormals[1]));
 		d_normal = (std::min) (d_normal, M_PI - d_normal);
 		distance.at(1) = fabs (weight * d_normal + (1.0 - weight) * fabs (planeCoefficients.at(1).dot (pt) ));
 
-		d_normal = fabs (getAngle3D (n, planeCoefficients[1]));
+		d_normal = fabs(getAngle3D(n, planeNormals[2]));
 		d_normal = (std::min) (d_normal, M_PI - d_normal);
 		distance.at(2) = fabs (weight * d_normal + (1.0 - weight) * fabs (planeCoefficients.at(2).dot (pt) ));
 				

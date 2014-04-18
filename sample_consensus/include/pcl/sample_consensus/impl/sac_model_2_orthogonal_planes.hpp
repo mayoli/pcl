@@ -203,11 +203,14 @@ pcl::SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT>::getDistancesToMod
 	
 	//rotationQuaternion.normalize ();
 	
-	std::vector<Eigen::Vector4f> planeCoefficients (2);
+	std::vector<Eigen::Vector4f> planeCoefficients(2), planeNormals(2);
 	
 	planeCoefficients.at(0) = Eigen::Vector4f (model_coefficients[3], model_coefficients[4], model_coefficients[5], -(model_coefficients[3]*model_coefficients[0] + model_coefficients[4]*model_coefficients[1] + model_coefficients[5]*model_coefficients[2]) ) ;
 	planeCoefficients.at(1) = Eigen::Vector4f (model_coefficients[6], model_coefficients[7], model_coefficients[8], -(model_coefficients[6]*model_coefficients[0] + model_coefficients[7]*model_coefficients[1] + model_coefficients[8]*model_coefficients[2]) ) ;
-		
+
+	planeNormals.at(0) = Eigen::Vector4f(model_coefficients[3], model_coefficients[4], model_coefficients[5], 0);
+	planeNormals.at(1) = Eigen::Vector4f(model_coefficients[6], model_coefficients[7], model_coefficients[8], 0);
+	
 	// the model coefficients (Tx, Ty, Tz, Qx, Qy, Qz, Qw)
 	for (size_t i = 0 ; i < indices_->size () ; i++ )
 		{
@@ -225,11 +228,11 @@ pcl::SampleConsensusModelTwoOrthogonalPlanes<PointT, PointNT>::getDistancesToMod
 		std::vector<double> distance(2);
 		
 		// Calculate the angular distance between the point normal and the plane normal
-		double d_normal = fabs (getAngle3D (n, planeCoefficients[0]));
+		double d_normal = fabs(getAngle3D(n, planeNormals[0]));
 		d_normal = (std::min) (d_normal, M_PI - d_normal);
 		distance.at(0) = fabs (weight * d_normal + (1.0 - weight) * fabs (planeCoefficients.at(0).dot (pt) ));
 
-		d_normal = fabs (getAngle3D (n, planeCoefficients[1]));
+		d_normal = fabs(getAngle3D(n, planeNormals[1]));
 		d_normal = (std::min) (d_normal, M_PI - d_normal);
 		distance.at(1) = fabs (weight * d_normal + (1.0 - weight) * fabs (planeCoefficients.at(1).dot (pt) ));
 
